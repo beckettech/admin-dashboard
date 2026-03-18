@@ -1,12 +1,12 @@
 import { AuthGuard } from '@/components/AuthGuard';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { DashboardStats } from '@/components/DashboardStats';
+import { LeadsPage } from '@/components/LeadsPage';
 
-export default function DashboardPage() {
+export default function Leads() {
   return (
     <AuthGuard>
       <DashboardLayout>
-        <DashboardStats />
+        <LeadsPage />
       </DashboardLayout>
     </AuthGuard>
   );

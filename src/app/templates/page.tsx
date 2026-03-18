@@ -1,12 +1,12 @@
 import { AuthGuard } from '@/components/AuthGuard';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { DashboardStats } from '@/components/DashboardStats';
+import { TemplatesPage } from '@/components/TemplatesPage';
 
-export default function DashboardPage() {
+export default function Templates() {
   return (
     <AuthGuard>
       <DashboardLayout>
-        <DashboardStats />
+        <TemplatesPage />
       </DashboardLayout>
     </AuthGuard>
   );

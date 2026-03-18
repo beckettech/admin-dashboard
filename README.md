@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FastFlow Admin Dashboard
 
-## Getting Started
+Admin dashboard for FastFlow - manage leads, demos, and customers.
 
-First, run the development server:
+## Setup
+
+### 1. Create Vercel Postgres Database
+
+```bash
+vercel postgres create fastflow-db
+vercel postgres connect fastflow-db
+```
+
+### 2. Run Schema
+
+Connect to your database and run the SQL in `src/lib/db/schema.sql`, or:
+
+```bash
+vercel postgres query fastflow-db < src/lib/db/schema.sql
+```
+
+### 3. Set Environment Variables
+
+In Vercel dashboard or via CLI:
+
+```bash
+vercel env add ADMIN_PASSWORD
+# Enter a secure password
+
+vercel env add ADMIN_JWT_SECRET
+# Enter a random 32+ char string
+
+vercel env add DISCORD_WEBHOOK_DEMO_VIEWS
+# Your Discord webhook URL (optional, for notifications)
+```
+
+### 4. Deploy
+
+```bash
+vercel --prod
+```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `ADMIN_PASSWORD` | Password for admin login | Yes |
+| `ADMIN_JWT_SECRET` | Secret for JWT signing | Yes |
+| `DISCORD_WEBHOOK_DEMO_VIEWS` | Discord webhook for demo view notifications | No |
+| `IP_HASH_SALT` | Salt for hashing IP addresses | No |
+| `POSTGRES_*` | Auto-added by Vercel Postgres | Yes |
+
+## Features
+
+- **Dashboard** - Overview stats and metrics
+- **Leads** - Full CRUD for lead management
+- **Demos** - Track demo views with analytics
+- **Customers** - Synced from Stripe
+
+## API Endpoints
+
+### Auth
+- `POST /api/auth/login` - Login with password
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/status` - Check auth status
+
+### Demos
+- `POST /api/demo/track` - Log a demo view
+- `GET /api/demos` - List demo views
+- `GET /api/demos?stats=true` - Get demo stats
+
+### Leads
+- `GET /api/leads` - List leads
+- `POST /api/leads` - Create lead
+- `GET /api/leads?stats=true` - Get lead stats
+- `GET /api/leads/:id` - Get single lead
+- `PATCH /api/leads/:id` - Update lead
+- `DELETE /api/leads/:id` - Delete lead
+
+### Customers
+- `GET /api/customers` - List customers
+
+## Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open http://localhost:3000
