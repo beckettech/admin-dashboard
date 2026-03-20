@@ -76,12 +76,32 @@ function buildEmail(p: {
 }) {
   const niche = NICHES[p.niche] || NICHES.hvac;
   const demoLabel = DEMO_TYPES.find(d => d.value === p.demoType)?.label || 'Demo';
-  const [svc1, svc2, svc3, svc4] = niche.services;
   const localLine = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
   const missedCallLine = p.missedCall ? '\n\nSomeone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!' : '';
   const introText = p.isLocal
     ? `My name is Beck.${localLine} My company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`
     : `My name is Beck and my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`;
+
+  // All possible upsell items — exclude the current demo type
+  const ALL_OFFERS: Record<string, { label: string; plain: string; html: string }> = {
+    voice: { label: 'AI voice agents', plain: `answer calls, book jobs, handle after-hours inquiries`, html: `answer calls, book jobs, handle after-hours inquiries` },
+    missed: { label: 'Missed call text-back', plain: `never lose a lead when you can't pick up`, html: `never lose a lead when you can't pick up` },
+    social: { label: 'Facebook & Instagram DM automation', plain: `respond to social messages instantly`, html: `respond to social messages instantly` },
+    reminders: { label: 'Reorder & checkup reminders', plain: `automated follow-ups for maintenance, filters, etc.`, html: `automated follow-ups for maintenance, filters, etc.` },
+    webchat: { label: 'AI webchat', plain: `answer questions and capture leads on your website 24/7`, html: `answer questions and capture leads on your website 24/7` },
+    sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
+  };
+
+  // Build upsell list: always show 4 items, exclude the current demo type
+  const upsellOrder = p.demoType === 'voice'
+    ? ['missed', 'social', 'webchat', 'reminders']
+    : p.demoType === 'social'
+    ? ['voice', 'missed', 'webchat', 'reminders']
+    : p.demoType === 'sms'
+    ? ['voice', 'social', 'webchat', 'reminders']
+    : /* webchat default */ ['voice', 'missed', 'social', 'reminders'];
+
+  const upsellItems = upsellOrder.map(k => ALL_OFFERS[k]);
 
   const subject = `${p.business} was selected for this Free ${demoLabel}`;
 
@@ -92,13 +112,10 @@ ${introText}${missedCallLine}
 I built a ${demoLabel.toLowerCase()} for ${p.business}:
  ${p.demoLink}
 
-It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off of clock.
+It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off the clock.
 
-Beyond ${demoLabel.toLowerCase()}, FastFlow also offers:
-- AI voice agents — ${svc1}
-- Missed call text-back — ${svc2}
-- Facebook & Instagram DM automation — ${svc3}
-- Reorder & checkup reminders — ${svc4}
+Beyond that, FastFlow also offers:
+${upsellItems.map(i => `- ${i.label} — ${i.plain}`).join('\n')}
 
 Would love to get your thoughts on the demo.
 
@@ -115,13 +132,10 @@ Beck Hoefling`;
   ${missedCallHtml}
   <p>I built a ${demoLabel.toLowerCase()} for <strong>${p.business}</strong>:</p>
   <p><a href="${p.demoLink}" target="_blank" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">${p.business}'s Custom Demo →</a></p>
-  <p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off of clock.</p>
-  <p>Beyond ${demoLabel.toLowerCase()}, FastFlow also offers:</p>
+  <p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off the clock.</p>
+  <p>Beyond that, FastFlow also offers:</p>
   <ul style="padding-left:20px;margin:8px 0;">
-    <li><strong>AI voice agents</strong> — ${svc1}</li>
-    <li><strong>Missed call text-back</strong> — ${svc2}</li>
-    <li><strong>Facebook &amp; Instagram DM automation</strong> — ${svc3}</li>
-    <li><strong>Reorder &amp; checkup reminders</strong> — ${svc4}</li>
+    ${upsellItems.map(i => `<li><strong>${i.label}</strong> — ${i.html}</li>`).join('\n    ')}
   </ul>
 
   <p>Would love to get your thoughts on the demo.</p>
