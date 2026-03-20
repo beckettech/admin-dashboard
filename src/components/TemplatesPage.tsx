@@ -157,6 +157,13 @@ function channelToDemoType(channel?: string | null): string {
 }
 
 // ─── Component ────────────────────────────────────────────────
+interface LeadContact {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  primary?: boolean;
+}
+
 interface Lead {
   id: string;
   business_name: string;
@@ -171,11 +178,26 @@ interface Lead {
   created_at: string;
   demo_url?: string | null;
   channel?: string | null;
+  contacts?: LeadContact[] | string | null;
+}
+
+function parseContacts(lead: Lead): LeadContact[] {
+  let contacts: LeadContact[] = [];
+  try {
+    const raw = lead.contacts;
+    contacts = typeof raw === 'string' ? JSON.parse(raw) : (raw || []);
+  } catch { contacts = []; }
+  // Always ensure primary fields are represented
+  if (contacts.length === 0 && (lead.owner_name || lead.email)) {
+    contacts = [{ name: lead.owner_name, email: lead.email, phone: lead.phone, primary: true }];
+  }
+  return contacts.filter(c => c.email || c.name);
 }
 
 export function TemplatesPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState('');
+  const [selectedContactIdx, setSelectedContactIdx] = useState(0);
   const [niche, setNiche] = useState('hvac');
   const [demoType, setDemoType] = useState('webchat');
   const [isLocal, setIsLocal] = useState(true);
@@ -198,22 +220,25 @@ export function TemplatesPage() {
       .then(data => {
         const arr: Lead[] = Array.isArray(data) ? data : (data.leads || []);
         setLeads(arr);
-        if (arr.length > 0) prefill(arr[0]);
+        if (arr.length > 0) prefillLead(arr[0], 0);
       })
       .catch(() => {});
   }, []);
 
-  const prefill = (lead: Lead) => {
-    const rawName = (lead.owner_name || '').trim();
-    // Skip if name looks like a phone number
+  const prefillLead = (lead: Lead, contactIdx = 0) => {
+    const contacts = parseContacts(lead);
+    const contact = contacts[contactIdx] || contacts[0] || null;
+    const rawName = (contact?.name || lead.owner_name || '').trim();
     const cleanName = (rawName && !rawName.startsWith('+') && !/^\d/.test(rawName)) ? rawName : '';
     const nameParts = cleanName.split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || 'there';
     const detectedType = channelToDemoType(lead.channel);
     setDemoType(detectedType);
     setMissedCall(detectedType === 'voice');
+    setSelectedContactIdx(contactIdx);
+    const contactEmail = (contact?.email && contact.email.includes('@')) ? contact.email : (lead.email || '');
     setFields({
-      toEmail: lead.email || '',
+      toEmail: contactEmail,
       toName: cleanName,
       firstName,
       business: lead.business_name || '',
@@ -224,9 +249,14 @@ export function TemplatesPage() {
   const handleLeadSelect = (id: string) => {
     setSelectedLeadId(id);
     const lead = leads.find(l => l.id === id);
-    if (lead) prefill(lead);
+    if (lead) prefillLead(lead, 0);
     setSent(false);
     setError('');
+  };
+
+  const handleContactSelect = (idx: number) => {
+    const lead = leads.find(l => l.id === selectedLeadId);
+    if (lead) prefillLead(lead, idx);
   };
 
   const email = buildEmail({ ...fields, niche, demoType, isLocal, missedCall });
@@ -280,7 +310,7 @@ export function TemplatesPage() {
           {/* Lead selector */}
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Select Lead</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <select
                 value={selectedLeadId}
                 onChange={e => handleLeadSelect(e.target.value)}
@@ -289,10 +319,33 @@ export function TemplatesPage() {
                 <option value="">— pick a lead —</option>
                 {leads.map(l => (
                   <option key={l.id} value={l.id}>
-                    {l.business_name}{l.owner_name ? ` · ${l.owner_name}` : ''}{l.status ? ` [${l.status}]` : ''}
+                    {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
                   </option>
                 ))}
               </select>
+              {/* Contact picker — shown when lead has multiple contacts */}
+              {selectedLeadId && (() => {
+                const lead = leads.find(l => l.id === selectedLeadId);
+                const contacts = lead ? parseContacts(lead) : [];
+                if (contacts.length <= 1) return null;
+                return (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Contact</p>
+                    <div className="space-y-1">
+                      {contacts.map((c, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleContactSelect(i)}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedContactIdx === i ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                        >
+                          <span className="font-medium">{c.name || c.email || 'Unknown'}</span>
+                          {c.email && <span className="block text-xs opacity-70">{c.email}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 

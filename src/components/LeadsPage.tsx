@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+interface LeadContact {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  primary?: boolean;
+}
+
 interface Lead {
   id: string;
   business_name: string;
@@ -18,11 +25,16 @@ interface Lead {
   email: string | null;
   phone: string | null;
   city: string | null;
+  website: string | null;
   status: string;
   call_status?: string | null;
   called_at?: string | null;
   notes: string | null;
   created_at: string;
+  demo_url?: string | null;
+  channel?: string | null;
+  contacts?: LeadContact[] | null;
+  demo_viewed_at?: string | null;
 }
 
 const PIPELINE_STAGES = [
@@ -355,44 +367,76 @@ export function LeadsPage() {
 
       {/* Lead Detail Modal */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{selectedLead?.business_name}</DialogTitle></DialogHeader>
-          {selectedLead && (
-            <div className="space-y-4">
-              <div className="text-sm space-y-1">
-                {selectedLead.owner_name && <p><span className="text-slate-400">Contact:</span> {selectedLead.owner_name}</p>}
-                {selectedLead.email && <p><span className="text-slate-400">Email:</span> {selectedLead.email}</p>}
-                {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> {selectedLead.phone}</p>}
-                {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
-                {selectedLead.call_status && (
-                  <p>
-                    <span className="text-slate-400">Call Status:</span>{' '}
-                    <span className={getCallStatusLabel(selectedLead.call_status)?.color || ''}>
-                      {getCallStatusLabel(selectedLead.call_status)?.icon} {getCallStatusLabel(selectedLead.call_status)?.label}
-                    </span>
-                  </p>
+          {selectedLead && (() => {
+            // Parse contacts
+            let contacts: LeadContact[] = [];
+            try { contacts = typeof selectedLead.contacts === 'string' ? JSON.parse(selectedLead.contacts) : (selectedLead.contacts || []); } catch { contacts = []; }
+            // Merge primary fields into contacts if not already there
+            if (contacts.length === 0 && (selectedLead.owner_name || selectedLead.email)) {
+              contacts = [{ name: selectedLead.owner_name, email: selectedLead.email, phone: selectedLead.phone, primary: true }];
+            }
+            const callInfo = getCallStatusLabel(selectedLead.call_status);
+            return (
+              <div className="space-y-4">
+                {/* Business info */}
+                <div className="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
+                  {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}
+                  {selectedLead.website && <p><span className="text-slate-400">Website:</span> <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.website}</a></p>}
+                  {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
+                  {selectedLead.channel && <p><span className="text-slate-400">Channel:</span> {selectedLead.channel}</p>}
+                  {selectedLead.demo_url && <p><span className="text-slate-400">Demo:</span> <a href={selectedLead.demo_url} target="_blank" rel="noopener noreferrer" className="text-blue-400">View Demo →</a></p>}
+                  {selectedLead.demo_viewed_at && <p><span className="text-slate-400">Demo Viewed:</span> {new Date(selectedLead.demo_viewed_at).toLocaleDateString()}</p>}
+                  {callInfo && <p><span className="text-slate-400">Call:</span> <span className={callInfo.color}>{callInfo.icon} {callInfo.label}</span>{selectedLead.called_at ? ` · ${new Date(selectedLead.called_at).toLocaleDateString()}` : ''}</p>}
+                  {selectedLead.notes && <p><span className="text-slate-400">Notes:</span> {selectedLead.notes}</p>}
+                </div>
+
+                {/* Contacts */}
+                {contacts.length > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-2">Contacts</p>
+                    <div className="space-y-2">
+                      {contacts.map((c, i) => (
+                        <div key={i} className="bg-slate-800 rounded-lg p-3 text-sm flex items-start justify-between">
+                          <div className="space-y-0.5">
+                            {c.name && <p className="font-medium">{c.name}{c.primary && contacts.length > 1 ? <span className="text-xs text-slate-500 ml-1">(primary)</span> : ''}</p>}
+                            {c.email && <p className="text-blue-400"><a href={`mailto:${c.email}`}>{c.email}</a></p>}
+                            {c.phone && <p className="text-slate-400">{c.phone}</p>}
+                          </div>
+                          <div className="flex gap-1 shrink-0 ml-2">
+                            {c.email && <a href={`mailto:${c.email}`} className="text-xs px-2 py-1 bg-slate-700 rounded">✉️</a>}
+                            {c.phone && <a href={`tel:${c.phone}`} className="text-xs px-2 py-1 bg-slate-700 rounded">📞</a>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 mb-2">Move to:</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {PIPELINE_STAGES.map((stage) => (
-                    <button
-                      key={stage.id}
-                      onClick={() => handleUpdateStatus(selectedLead.id, stage.id)}
-                      className={`h-10 rounded-lg text-sm font-medium ${normalizeStatus(selectedLead.status) === stage.id ? stage.color + ' text-white' : 'bg-slate-800 text-slate-300'}`}
-                    >
-                      {stage.label}
-                    </button>
-                  ))}
+
+                {/* Move to stage */}
+                <div>
+                  <p className="text-xs text-slate-400 mb-2">Move to:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PIPELINE_STAGES.map((stage) => (
+                      <button
+                        key={stage.id}
+                        onClick={() => handleUpdateStatus(selectedLead.id, stage.id)}
+                        className={`h-10 rounded-lg text-sm font-medium ${normalizeStatus(selectedLead.status) === stage.id ? stage.color + ' text-white' : 'bg-slate-800 text-slate-300'}`}
+                      >
+                        {stage.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(selectedLead.demo_url || demoLink(selectedLead)); alert('Copied!'); }}>Copy Demo Link</Button>
+                  <Button variant="destructive" onClick={() => handleDelete(selectedLead.id)}>Delete</Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(demoLink(selectedLead)); alert('Copied!'); }}>Copy Demo Link</Button>
-                <Button variant="destructive" onClick={() => handleDelete(selectedLead.id)}>Delete</Button>
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
