@@ -179,7 +179,7 @@ export function TemplatesPage() {
       toName: lead.owner_name || '',
       firstName,
       business: lead.business_name || '',
-      demoLink: lead.demo_url || `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=webchat`,
+      demoLink: `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=webchat`,
     });
   };
 
@@ -378,20 +378,17 @@ export function TemplatesPage() {
                 <span className="text-slate-400">To:</span> {fields.toName ? `${fields.toName} ` : ''}{fields.toEmail}<br/>
                 <span className="text-slate-400">Subject:</span> {email.subject}
               </CardDescription>
-              <CardContent>
-              <div
-                className="text-sm text-slate-300 leading-relaxed"
-                style={{ minHeight: '500px' }}
-                dangerouslySetInnerHTML={{ __html: email.html }} />
-              </div>
             </CardHeader>
             <CardContent>
               <div
                 className="text-sm text-slate-300 leading-relaxed"
                 style={{ minHeight: '500px' }}
                 dangerouslySetInnerHTML={{ __html: email.html }}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </>
+    </div>
   );
 }
