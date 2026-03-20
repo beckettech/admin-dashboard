@@ -58,9 +58,14 @@ export async function POST(request: Request) {
           }
         } else {
           // New lead - insert
+          const ownerName = (lead.owner_name && lead.owner_name.trim() && !lead.owner_name.startsWith('+')) ? lead.owner_name.trim() : null;
+          const email = (lead.email && lead.email.includes('@')) ? lead.email.trim() : null;
+          const demoUrl = lead.demo_url || null;
+          const channel = lead.channel || null;
           await sql`
-            INSERT INTO leads (id, business_name, owner_name, email, phone, status, notes)
-            VALUES (${id}, ${businessName}, ${lead.owner_name || lead.business_name}, ${lead.email || null}, ${lead.phone || null}, 'created', 'Imported from BotMockups')
+            INSERT INTO leads (id, business_name, owner_name, email, phone, status, notes, demo_url, channel)
+            VALUES (${id}, ${businessName}, ${ownerName}, ${email}, ${lead.phone || null}, 'created', 'Imported from BotMockups', ${demoUrl}, ${channel})
+            ON CONFLICT DO NOTHING
           `;
           imported++;
         }

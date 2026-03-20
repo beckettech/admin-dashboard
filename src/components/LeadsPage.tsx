@@ -146,10 +146,13 @@ export function LeadsPage() {
           const v = values[i] || '';
           const headerLower = h.toLowerCase();
           if (headerLower.includes('business')) lead.business_name = v;
-          else if (headerLower.includes('contact')) lead.owner_name = v;
-          else if (headerLower.includes('email')) lead.email = v;
+          else if (headerLower === 'contact name' || headerLower === 'contact_name' || (headerLower.includes('contact') && headerLower.includes('name'))) lead.owner_name = v;
+          else if (headerLower === 'contact email' || headerLower === 'contact_email' || (headerLower.includes('contact') && headerLower.includes('email'))) lead.email = v;
+          else if (headerLower.includes('email') && !headerLower.includes('contact')) lead.email = v;
           else if (headerLower.includes('phone')) lead.phone = v;
-          else if (headerLower.includes('demo')) { const m = v.match(/demo\/([a-f0-9-]+)/); if (m) lead.lead_id = m[1]; }
+          else if (headerLower === 'channel') lead.channel = v;
+          else if (headerLower.includes('demo url') || headerLower === 'demo_url') lead.demo_url = v;
+          else if (headerLower.includes('demo') && v.includes('/demo/')) { lead.demo_url = v; const m = v.match(/demo\/([a-f0-9-]+)/); if (m) lead.lead_id = m[1]; }
         });
         return lead;
       }).filter(l => l.business_name);

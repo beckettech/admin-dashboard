@@ -79,12 +79,15 @@ function buildEmail(p: {
   const [svc1, svc2, svc3, svc4] = niche.services;
   const localLine = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
   const missedCallLine = p.missedCall ? '\n\nSomeone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!' : '';
+  const introText = p.isLocal
+    ? `My name is Beck.${localLine} My company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`
+    : `My name is Beck and my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`;
 
   const subject = `${p.business} was selected for this Free ${demoLabel}`;
 
   const bodyText = `Hi ${p.firstName},
 
-My name is Beck and${localLine} my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.${missedCallLine}
+${introText}${missedCallLine}
 
 I built a ${demoLabel.toLowerCase()} for ${p.business}:
  ${p.demoLink}
@@ -102,11 +105,13 @@ Would love to get your thoughts on the demo.
 Best,
 Beck Hoefling`;
 
-  const localHtml = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
   const missedCallHtml = p.missedCall ? '<p>Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!</p>' : '';
+  const introHtml = p.isLocal
+    ? `My name is Beck. I'm a SWFL local (Cape Coral). My company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`
+    : `My name is Beck and my company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`;
   const bodyHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
   <p>Hi ${p.firstName},</p>
-  <p>My name is Beck and${localHtml} my company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.</p>
+  <p>${introHtml}</p>
   ${missedCallHtml}
   <p>I built a ${demoLabel.toLowerCase()} for <strong>${p.business}</strong>:</p>
   <p><a href="${p.demoLink}" target="_blank" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">${p.business}'s Custom Demo →</a></p>
@@ -127,6 +132,16 @@ Beck Hoefling`;
   return { subject, text: bodyText, html: bodyHtml };
 }
 
+// ─── Channel → demo type mapping ─────────────────────────────
+function channelToDemoType(channel?: string | null): string {
+  if (!channel) return 'webchat';
+  const c = channel.toLowerCase();
+  if (c.includes('voice') || c.includes('inbound') || c.includes('outbound')) return 'voice';
+  if (c.includes('facebook') || c.includes('instagram') || c.includes('social') || c.includes('organic') || c.includes('lead ads')) return 'social';
+  if (c.includes('sms') || c.includes('text')) return 'sms';
+  return 'webchat';
+}
+
 // ─── Component ────────────────────────────────────────────────
 interface Lead {
   id: string;
@@ -140,6 +155,8 @@ interface Lead {
   called_at?: string | null;
   notes: string | null;
   created_at: string;
+  demo_url?: string | null;
+  channel?: string | null;
 }
 
 export function TemplatesPage() {
@@ -173,14 +190,20 @@ export function TemplatesPage() {
   }, []);
 
   const prefill = (lead: Lead) => {
-    const nameParts = (lead.owner_name || '').trim().split(/\s+/);
+    const rawName = (lead.owner_name || '').trim();
+    // Skip if name looks like a phone number
+    const cleanName = (rawName && !rawName.startsWith('+') && !/^\d/.test(rawName)) ? rawName : '';
+    const nameParts = cleanName.split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || 'there';
+    const detectedType = channelToDemoType(lead.channel);
+    setDemoType(detectedType);
+    setMissedCall(detectedType === 'voice');
     setFields({
       toEmail: lead.email || '',
-      toName: lead.owner_name || '',
+      toName: cleanName,
       firstName,
       business: lead.business_name || '',
-      demoLink: `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=webchat`,
+      demoLink: lead.demo_url || `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=${detectedType}`,
     });
   };
 
@@ -274,8 +297,8 @@ export function TemplatesPage() {
               </div>
               <div className="flex items-center justify-between py-1">
                 <div>
-                  <Label>After-Hours Missed Call</Label>
-                  <p className="text-xs text-slate-500 mt-0.5">Inserts missed call sentence in the intro</p>
+                  <Label>After-Hours Line</Label>
+                  <p className="text-xs text-slate-500 mt-0.5">Auto-on for voice demos. Inserts missed call sentence in intro.</p>
                 </div>
                 <button
                   onClick={() => setMissedCall(v => !v)}
