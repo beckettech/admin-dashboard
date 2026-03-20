@@ -78,13 +78,13 @@ function buildEmail(p: {
   const demoLabel = DEMO_TYPES.find(d => d.value === p.demoType)?.label || 'Demo';
   const [svc1, svc2, svc3, svc4] = niche.services;
   const localLine = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
-  const missedCallLine = (p.missedCall && p.demoType === 'voice') ? ' Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with missed call text-back. Never lose a lead again!' : '';
+  const missedCallPara = (p.missedCall && p.demoType === 'voice') ? '\n\nSomeone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!' : '';
 
   const subject = `${p.business} was selected for this Free ${demoLabel}`;
 
   const bodyText = `Hi ${p.firstName},
 
-My name is Beck and${localLine} my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.
+My name is Beck and${localLine} my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.${missedCallPara}
 
 I built a ${demoLabel.toLowerCase()} for ${p.business}:
  ${p.demoLink}
@@ -95,7 +95,7 @@ Beyond ${demoLabel.toLowerCase()}, FastFlow also offers:
 - AI voice agents — ${svc1}
 - Missed call text-back — ${svc2}
 - Facebook & Instagram DM automation — ${svc3}
-- Reorder & checkup reminders — ${svc4}${missedCallLine}
+- Reorder & checkup reminders — ${svc4}
 
 Would love to get your thoughts on the demo.
 
@@ -103,9 +103,11 @@ Best,
 Beck Hoefling`;
 
   const localHtml = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
+  const missedCallHtml = p.missedCall && p.demoType === 'voice' ? '<p style="margin-top:12px;color:#f87171;">Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!</p>' : '';
   const bodyHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
   <p>Hi ${p.firstName},</p>
   <p>My name is Beck and${localHtml} my company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.</p>
+  ${missedCallHtml}
   <p>I built a ${demoLabel.toLowerCase()} for <strong>${p.business}</strong>:</p>
   <p><a href="${p.demoLink}" target="_blank" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">${p.business}'s Custom Demo →</a></p>
   <p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off of clock.</p>
@@ -116,7 +118,6 @@ Beck Hoefling`;
     <li><strong>Facebook &amp; Instagram DM automation</strong> — ${svc3}</li>
     <li><strong>Reorder &amp; checkup reminders</strong> — ${svc4}</li>
   </ul>
-  ${p.missedCall && p.demoType === 'voice' ? '<p style="margin-top:16px;color:#f87171;"><strong>P.S.</strong> Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with missed call text-back. Never lose a lead again!</p>' : ''}
   <p>Would love to get your thoughts on the demo.</p>
   <p>Best,<br><strong>Beck Hoefling</strong></p>
 </div>
