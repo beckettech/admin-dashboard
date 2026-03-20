@@ -60,17 +60,53 @@ export async function POST(request: Request) {
             if (!alreadyHas) contacts.push(newContact);
           }
 
-          // Update with any new info — use individual fallback updates so missing columns don't break everything
+          // Check if this business also exists in prospects → merge ALL prospect fields
+          const prospect = await sql`
+            SELECT * FROM prospects
+            WHERE company_name ILIKE ${businessName}
+               OR (phone IS NOT NULL AND phone = ${phone})
+            LIMIT 1
+          `;
+
+          // Build full update data
+          const updateData: Record<string, any> = {
+            demo_url: demoUrl,
+            channel: channel,
+            email: email,
+            owner_name: ownerName,
+            updated_at: new Date(),
+          };
+
+          // Add prospects merged fields if found
+          if (prospect.rows.length > 0) {
+            const p = prospect.rows[0];
+            updateData.call_status = p.call_status;
+            updateData.call_result = p.call_result;
+            updateData.called_at = p.called_at;
+            updateData.scheduled_call_time = p.scheduled_call_time;
+            updateData.call_transcript = p.call_transcript;
+            updateData.website = p.website;
+            updateData.city = p.location;
+
+            // Add prospect contact if different
+            if (p.contact || p.email) {
+              const prospectContact = { name: p.contact || null, email: p.email || null, phone: p.phone || null, primary: true };
+              const alreadyHas = contacts.some(c =>
+                (c.email && c.email === prospectContact.email) ||
+                (c.name && c.name === prospectContact.name)
+              );
+              if (!alreadyHas) contacts.push(prospectContact);
+            }
+          }
+
+          // Update with new info — use individual fallback updates so missing columns don't break everything
           try {
-            await sql`
-              UPDATE leads SET
-                demo_url   = COALESCE(${demoUrl}, demo_url),
-                channel    = COALESCE(${channel}, channel),
-                email      = COALESCE(${email}, email),
-                owner_name = COALESCE(${ownerName}, owner_name),
-                updated_at = NOW()
-              WHERE id = ${existingLead.id}
-            `;
+            const setClause = Object.entries(updateData)
+              .map(([k, v], i) => `${k} = COALESCE($${i + 2}, ${k})`)
+              .join(', ');
+
+            const values = [existingLead.id, ...Object.values(updateData)];
+            await sql`UPDATE leads SET ${setClause} WHERE id = $1`, values;
           } catch (e) {
             console.error('Update error (non-contacts fields):', e);
           }
@@ -83,7 +119,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Check if this business exists as a prospect → merge info
+        // Check if this business exists as a prospect → merge ALL prospect fields
         const prospect = await sql`
           SELECT * FROM prospects
           WHERE company_name ILIKE ${businessName}
@@ -102,6 +138,15 @@ export async function POST(request: Request) {
           mergedWebsite = p.website;
           mergedCity = p.location;
 
+          // Merge ALL prospect data into the lead
+          const prospectsFields = {
+            call_status: p.call_status,
+            call_result: p.call_result,
+            called_at: p.called_at,
+            scheduled_call_time: p.scheduled_call_time,
+            call_transcript: p.call_transcript,
+          };
+
           // Add prospect contact
           if (p.contact || p.email) {
             contacts.push({ name: p.contact || null, email: p.email || null, phone: p.phone || null, primary: true });
@@ -117,11 +162,21 @@ export async function POST(request: Request) {
           if (!alreadyHas) contacts.push({ ...newContact, primary: contacts.length === 0 });
         }
 
+        // Build prospects merged fields (all nullable)
+        const prospectsMerged = {
+          call_status: prospect.rows[0]?.call_status || null,
+          call_result: prospect.rows[0]?.call_result || null,
+          called_at: prospect.rows[0]?.called_at || null,
+          scheduled_call_time: prospect.rows[0]?.scheduled_call_time || null,
+          call_transcript: prospect.rows[0]?.call_transcript || null,
+        };
+
         const insertOwner = ownerName || (contacts[0]?.name as string) || null;
         const insertEmail = email || (contacts[0]?.email as string) || null;
         // Insert without contacts first (safe), then try to add contacts
         await sql`
-          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel)
+          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel,
+            call_status, call_result, called_at, scheduled_call_time, call_transcript)
           VALUES (
             ${id}, ${businessName},
             ${insertOwner},
@@ -132,13 +187,23 @@ export async function POST(request: Request) {
             'created',
             'Imported from CSV',
             ${demoUrl},
-            ${channel}
+            ${channel},
+            ${prospectsMerged.call_status},
+            ${prospectsMerged.call_result},
+            ${prospectsMerged.called_at},
+            ${prospectsMerged.scheduled_call_time},
+            ${prospectsMerged.call_transcript}
           )
           ON CONFLICT (id) DO UPDATE SET
             demo_url   = COALESCE(EXCLUDED.demo_url, leads.demo_url),
             channel    = COALESCE(EXCLUDED.channel, leads.channel),
             email      = COALESCE(EXCLUDED.email, leads.email),
             owner_name = COALESCE(EXCLUDED.owner_name, leads.owner_name),
+            call_status = COALESCE(EXCLUDED.call_status, leads.call_status),
+            call_result = COALESCE(EXCLUDED.call_result, leads.call_result),
+            called_at = COALESCE(EXCLUDED.called_at, leads.called_at),
+            scheduled_call_time = COALESCE(EXCLUDED.scheduled_call_time, leads.scheduled_call_time),
+            call_transcript = COALESCE(EXCLUDED.call_transcript, leads.call_transcript),
             updated_at = NOW()
         `;
         // Try contacts separately
