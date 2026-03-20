@@ -14,6 +14,12 @@ export async function logDemoView(data: {
     VALUES (${data.lead_id}, ${data.business_name}, ${data.website}, ${data.demo_type}, ${data.ip_hash || null}, ${data.user_agent || null})
     RETURNING id
   `;
+  // Also update lead status to 'opened' if it exists
+  await sql`
+    UPDATE leads
+    SET status = 'opened', demo_viewed_at = NOW()
+    WHERE id = ${data.lead_id} AND status != 'opened'
+  `;
   return result.rows[0];
 }
 

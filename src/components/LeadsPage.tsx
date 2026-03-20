@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 
 interface Lead {
   id: string;
@@ -20,6 +19,8 @@ interface Lead {
   phone: string | null;
   city: string | null;
   status: string;
+  call_status?: string | null;
+  called_at?: string | null;
   notes: string | null;
   created_at: string;
 }
@@ -34,7 +35,6 @@ const PIPELINE_STAGES = [
   { id: 'sold', label: 'Sold! 🎉', color: 'bg-emerald-500' },
 ];
 
-// Map old statuses to new pipeline stages
 const STATUS_MAP: Record<string, string> = {
   'found': 'created',
   'building': 'created',
@@ -47,23 +47,50 @@ const STATUS_MAP: Record<string, string> = {
   'archived': 'not_interested',
 };
 
+const CALL_STATUS_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+  'human': { label: 'Has Coverage', color: 'text-green-400', icon: '✅' },
+  'no_answer': { label: 'No Answer 🎯', color: 'text-orange-400', icon: '🎯' },
+  'calling': { label: 'Calling...', color: 'text-blue-400', icon: '📞' },
+  'failed': { label: 'Failed', color: 'text-red-400', icon: '❌' },
+};
+
 export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showCallDialog, setShowCallDialog] = useState(false);
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [calling, setCalling] = useState(false);
+  const [callResults, setCallResults] = useState<any>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [showNoAnswerOnly, setShowNoAnswerOnly] = useState(false);
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'calls'>('pipeline');
 
   useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = () => {
     fetch('/api/leads').then((r) => r.json()).then((d) => {
       setLeads(Array.isArray(d) ? d : []);
       setLoading(false);
     });
-  }, []);
+  };
 
   const normalizeStatus = (status: string) => STATUS_MAP[status] || status;
+
+  const getCallStatusLabel = (callStatus?: string | null) => {
+    if (!callStatus) return null;
+    return CALL_STATUS_LABELS[callStatus] || { label: callStatus, color: 'text-slate-400', icon: '?' };
+  };
+
+  const calledLeads = leads.filter(l => l.call_status && l.call_status !== 'uncalled');
+  const uncalledLeads = leads.filter(l => !l.call_status || l.call_status === 'uncalled');
+  const noAnswerCount = leads.filter(l => l.call_status === 'no_answer').length;
 
   const handleCreate = async (formData: FormData) => {
     await fetch('/api/leads', {
@@ -80,7 +107,7 @@ export function LeadsPage() {
       }),
     });
     setShowAddDialog(false);
-    fetch('/api/leads').then((r) => r.json()).then((d) => setLeads(Array.isArray(d) ? d : []));
+    fetchLeads();
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -89,23 +116,26 @@ export function LeadsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
-    fetch('/api/leads').then((r) => r.json()).then((d) => setLeads(Array.isArray(d) ? d : []));
+    fetchLeads();
     setSelectedLead(null);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this lead?')) return;
     await fetch(`/api/leads/${id}`, { method: 'DELETE' });
-    fetch('/api/leads').then((r) => r.json()).then((d) => setLeads(Array.isArray(d) ? d : []));
+    fetchLeads();
     setSelectedLead(null);
   };
 
   const handleImport = async () => {
-    if (!importText.trim()) return;
+    const file = selectedFile || (importText.trim() ? new File([importText], 'import.csv', { type: 'text/csv' }) : null);
+    if (!file) return;
+
     setImporting(true);
     try {
-      const lines = importText.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+      const text = await file.text();
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
       const leadsToImport = lines.slice(1).map(line => {
         const values: string[] = [];
         let current = '', inQ = false;
@@ -114,70 +144,211 @@ export function LeadsPage() {
         const lead: Record<string, string> = {};
         headers.forEach((h, i) => {
           const v = values[i] || '';
-          if (h.includes('business')) lead.business_name = v;
-          else if (h.includes('contact')) lead.owner_name = v;
-          else if (h.includes('email')) lead.email = v;
-          else if (h.includes('phone')) lead.phone = v;
-          else if (h.includes('demo')) { const m = v.match(/demo\/([a-f0-9-]+)/); if (m) lead.lead_id = m[1]; }
+          const headerLower = h.toLowerCase();
+          if (headerLower.includes('business')) lead.business_name = v;
+          else if (headerLower.includes('contact')) lead.owner_name = v;
+          else if (headerLower.includes('email')) lead.email = v;
+          else if (headerLower.includes('phone')) lead.phone = v;
+          else if (headerLower.includes('demo')) { const m = v.match(/demo\/([a-f0-9-]+)/); if (m) lead.lead_id = m[1]; }
         });
         return lead;
       }).filter(l => l.business_name);
-      if (!leadsToImport.length) { alert('No leads'); return; }
+      if (!leadsToImport.length) { alert('No leads found in CSV'); return; }
       const res = await fetch('/api/leads/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads: leadsToImport }) });
       const r = await res.json();
-      alert(`${r.imported} imported, ${r.skipped} skipped`);
-      setImportText(''); setShowImportDialog(false);
-      fetch('/api/leads').then((r2) => r2.json()).then((d) => setLeads(Array.isArray(d) ? d : []));
-    } catch { alert('Failed'); }
+      let message = `✅ ${r.imported} imported`;
+      if (r.updated) message += `, ${r.updated} updated`;
+      if (r.merged) message += ` (${r.merged} total)`;
+      alert(message);
+      setImportText('');
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setShowImportDialog(false);
+      fetchLeads();
+    } catch (e) { alert('Failed to import CSV. Check the file format.'); }
     finally { setImporting(false); }
+  };
+
+  const handleAfterHoursCall = async (testPhone?: string) => {
+    setCalling(true);
+    setCallResults(null);
+    try {
+      const res = await fetch('/api/calls/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testPhone ? { testPhone } : {}),
+      });
+      const data = await res.json();
+      setCallResults(data);
+      if (!testPhone) {
+        setTimeout(() => fetchLeads(), 2000);
+      }
+    } catch (error) {
+      setCallResults({ error: String(error) });
+    } finally {
+      setCalling(false);
+    }
   };
 
   const demoLink = (lead: Lead) => `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=webchat`;
 
-  const getLeadsByStage = (stage: string) => leads.filter(l => normalizeStatus(l.status) === stage);
+  const getLeadsByStage = (stage: string) => {
+    let filtered = leads.filter(l => normalizeStatus(l.status) === stage);
+    if (showNoAnswerOnly) {
+      filtered = filtered.filter(l => l.call_status === 'no_answer');
+    }
+    return filtered;
+  };
 
-  if (loading) return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" /></div>;
+  if (loading) return (
+    <div className="flex justify-center py-12">
+      <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+    </div>
+  );
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Pipeline</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowImportDialog(true)} className="h-10 px-4 text-sm">Import</Button>
-          <Button onClick={() => setShowAddDialog(true)} className="h-10 px-4 text-sm">+ Add</Button>
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-700 pb-2">
+        <button
+          onClick={() => setActiveTab('pipeline')}
+          className={`px-4 py-2 text-sm font-medium rounded-t ${activeTab === 'pipeline' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Pipeline
+        </button>
+        <button
+          onClick={() => setActiveTab('calls')}
+          className={`px-4 py-2 text-sm font-medium rounded-t flex items-center gap-2 ${activeTab === 'calls' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Call Log {calledLeads.length > 0 && <span className="bg-blue-500 text-xs px-1.5 rounded">{calledLeads.length}</span>}
+        </button>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : 'Call Log'}</h1>
+        <div className="flex gap-2 flex-wrap">
+          {activeTab === 'pipeline' && noAnswerCount > 0 && (
+            <Button 
+              variant={showNoAnswerOnly ? 'default' : 'outline'}
+              onClick={() => setShowNoAnswerOnly(!showNoAnswerOnly)}
+              className="h-10 px-4 text-sm"
+            >
+              🎯 No Answer Targets ({noAnswerCount})
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setShowCallDialog(true)} className="h-10 px-4 text-sm">📞 After-Hours Check</Button>
+          {activeTab === 'pipeline' && (
+            <>
+              <Button variant="outline" onClick={() => setShowImportDialog(true)} className="h-10 px-4 text-sm">Import</Button>
+              <Button onClick={() => setShowAddDialog(true)} className="h-10 px-4 text-sm">+ Add</Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="overflow-x-auto pb-4 -mx-4 px-4">
-        <div className="flex gap-3 min-w-max">
-          {PIPELINE_STAGES.map((stage) => (
-            <div key={stage.id} className="w-72 shrink-0">
-              <div className={`${stage.color} rounded-t-xl px-4 py-2 flex items-center justify-between`}>
-                <span className="font-medium text-sm text-white">{stage.label}</span>
-                <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{getLeadsByStage(stage.id).length}</span>
-              </div>
-              <div className="bg-slate-900/50 rounded-b-xl p-2 space-y-2 min-h-[200px]">
-                {getLeadsByStage(stage.id).map((lead) => (
-                  <div 
-                    key={lead.id} 
-                    onClick={() => setSelectedLead(lead)}
-                    className="bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700 transition-colors"
-                  >
-                    <div className="font-medium text-sm truncate">{lead.business_name}</div>
-                    {lead.city && <div className="text-xs text-slate-400 mt-1">{lead.city}</div>}
-                    <div className="flex gap-1 mt-2">
-                      {lead.phone && <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">📞</a>}
-                      {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">✉️</a>}
-                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(demoLink(lead)); alert('Copied!'); }} className="text-xs px-2 py-1 bg-slate-700 rounded">🔗</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Call Log Tab */}
+      {activeTab === 'calls' && (
+        <div className="space-y-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-orange-400">{leads.filter(l => l.call_status === 'no_answer').length}</div>
+              <div className="text-xs text-slate-400">No Answer 🎯</div>
             </div>
-          ))}
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-400">{leads.filter(l => l.call_status === 'human').length}</div>
+              <div className="text-xs text-slate-400">Has Coverage ✅</div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-slate-400">{uncalledLeads.length}</div>
+              <div className="text-xs text-slate-400">Not Called Yet</div>
+            </div>
+          </div>
+
+          {/* Called Leads List */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Call Results</h2>
+            {calledLeads.length === 0 ? (
+              <div className="bg-slate-800/50 rounded-lg p-8 text-center text-slate-400">
+                <p>No calls made yet.</p>
+                <p className="text-sm mt-2">Click "📞 After-Hours Check" to start calling leads.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {calledLeads.map((lead) => {
+                  const callInfo = getCallStatusLabel(lead.call_status);
+                  return (
+                    <div 
+                      key={lead.id}
+                      onClick={() => setSelectedLead(lead)}
+                      className="bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="font-medium">{lead.business_name}</div>
+                        <div className="text-xs text-slate-400">{lead.phone} {lead.city && `• ${lead.city}`}</div>
+                      </div>
+                      <div className="text-right">
+                        {callInfo && (
+                          <div className={`text-sm font-medium ${callInfo.color}`}>
+                            {callInfo.icon} {callInfo.label}
+                          </div>
+                        )}
+                        {lead.called_at && (
+                          <div className="text-xs text-slate-500">
+                            {new Date(lead.called_at).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Kanban Board */}
+      {activeTab === 'pipeline' && (
+        <div className="overflow-x-auto pb-4 -mx-4 px-4">
+          <div className="flex gap-3 min-w-max">
+            {PIPELINE_STAGES.map((stage) => (
+              <div key={stage.id} className="w-72 shrink-0">
+                <div className={`${stage.color} rounded-t-xl px-4 py-2 flex items-center justify-between`}>
+                  <span className="font-medium text-sm text-white">{stage.label}</span>
+                  <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{getLeadsByStage(stage.id).length}</span>
+                </div>
+                <div className="bg-slate-900/50 rounded-b-xl p-2 space-y-2 min-h-[200px]">
+                  {getLeadsByStage(stage.id).map((lead) => {
+                    const callInfo = getCallStatusLabel(lead.call_status);
+                    return (
+                      <div 
+                        key={lead.id} 
+                        onClick={() => setSelectedLead(lead)}
+                        className="bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700 transition-colors"
+                      >
+                        <div className="font-medium text-sm truncate">{lead.business_name}</div>
+                        {lead.city && <div className="text-xs text-slate-400 mt-1">{lead.city}</div>}
+                        {callInfo && (
+                          <div className={`text-xs mt-1 ${callInfo.color}`}>
+                            {callInfo.icon} {callInfo.label}
+                          </div>
+                        )}
+                        <div className="flex gap-1 mt-2">
+                          {lead.phone && <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">📞</a>}
+                          {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">✉️</a>}
+                          <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(demoLink(lead)); alert('Copied!'); }} className="text-xs px-2 py-1 bg-slate-700 rounded">🔗</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Lead Detail Modal */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
@@ -190,6 +361,14 @@ export function LeadsPage() {
                 {selectedLead.email && <p><span className="text-slate-400">Email:</span> {selectedLead.email}</p>}
                 {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> {selectedLead.phone}</p>}
                 {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
+                {selectedLead.call_status && (
+                  <p>
+                    <span className="text-slate-400">Call Status:</span>{' '}
+                    <span className={getCallStatusLabel(selectedLead.call_status)?.color || ''}>
+                      {getCallStatusLabel(selectedLead.call_status)?.icon} {getCallStatusLabel(selectedLead.call_status)?.label}
+                    </span>
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-2">Move to:</p>
@@ -234,10 +413,93 @@ export function LeadsPage() {
 
       <Dialog open={showImportDialog} onOpenChange={() => setShowImportDialog(false)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Import from BotMockups</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Import Demos CSV</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Textarea value={importText} onChange={e => setImportText(e.target.value)} placeholder="Paste CSV..." className="min-h-[100px] font-mono text-xs" />
-            <Button onClick={handleImport} disabled={importing || !importText.trim()} className="w-full h-10">{importing ? 'Importing...' : 'Import'}</Button>
+            <div>
+              <Label>Upload CSV File</Label>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                    setImportText('');
+                  }
+                }}
+                className="h-12 cursor-pointer"
+              />
+              {selectedFile && <p className="text-sm text-slate-400 mt-1">Selected: {selectedFile.name}</p>}
+            </div>
+            <Button onClick={handleImport} disabled={importing || (!selectedFile && !importText.trim())} className="w-full h-12">{importing ? 'Importing...' : 'Import'}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* After-Hours Call Dialog */}
+      <Dialog open={showCallDialog} onOpenChange={() => setShowCallDialog(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>📞 After-Hours Call Check</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-400">
+              Calls leads to detect if they have after-hours coverage. Silent detection only - no messages left.
+            </p>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold">{uncalledLeads.filter(l => l.phone).length}</div>
+                <div className="text-xs text-slate-400">Leads to Call</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold text-orange-400">{noAnswerCount}</div>
+                <div className="text-xs text-slate-400">No Answer Targets</div>
+              </div>
+            </div>
+
+            {/* How it works */}
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <p className="text-xs text-slate-300 space-y-1">
+                <span className="block">✅ Human answers → "Has Coverage" (not a target)</span>
+                <span className="block">🎯 Voicemail or No Answer → "No Answer Target" (potential customer)</span>
+              </p>
+            </div>
+
+            {/* Test Call */}
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleAfterHoursCall('+12394109645')}
+              disabled={calling}
+            >
+              🧪 Test Call (My Phone: +12394109645)
+            </Button>
+
+            {/* Run Batch */}
+            <Button 
+              onClick={() => handleAfterHoursCall()}
+              disabled={calling || uncalledLeads.filter(l => l.phone).length === 0}
+              className="w-full h-10"
+            >
+              {calling ? 'Calling...' : `📞 Call ${uncalledLeads.filter(l => l.phone).length} Leads`}
+            </Button>
+
+            {/* Results */}
+            {callResults && (
+              <div className="bg-slate-800 rounded-lg p-3 text-sm">
+                {callResults.error ? (
+                  <p className="text-red-400">{callResults.error}</p>
+                ) : (
+                  <div>
+                    <p className="text-green-400">✓ {callResults.message || `Called ${callResults.called} leads`}</p>
+                    {callResults.callSid && (
+                      <p className="text-xs text-slate-400 mt-1">Call SID: {callResults.callSid}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

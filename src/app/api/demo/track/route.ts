@@ -41,22 +41,23 @@ export async function POST(request: Request) {
       user_agent: userAgent.slice(0, 500),
     });
     
-    // Also send to Discord (keep existing behavior)
+    // Also send to Discord (notify in the specified channel)
     const discordWebhook = process.env.DISCORD_WEBHOOK_DEMO_VIEWS;
     if (discordWebhook) {
       const demoLink = `https://fastflow.bek-tech.com/api/demo?lead=${lead}&business=${encodeURIComponent(business || 'Unknown')}&website=${encodeURIComponent(website || '')}&type=${type || 'webchat'}`;
-      
+
       await fetch(discordWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: `<@459184636723986433> 🔍 **Demo Viewed**`,
+          content: `<#1481014187915477082> 🔍 **Demo Opened** — Check dashboard to categorize!`,
           embeds: [{
             title: `${business || 'Unknown Business'}`,
             url: demoLink,
             fields: [
               { name: 'Business', value: business || 'Unknown', inline: true },
               { name: 'Type', value: type || 'webchat', inline: true },
+              { name: 'Lead ID', value: lead || 'Unknown', inline: true },
               { name: 'Website', value: website ? `[${website}](${website})` : 'N/A', inline: false }
             ],
             color: 3447003,
