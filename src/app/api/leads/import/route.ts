@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         if (existing.rows.length > 0) {
           const existingLead = existing.rows[0];
 
-          // Merge contacts
+          // Merge contacts safely
           let contacts: Array<Record<string, string | boolean | null>> = [];
           try { contacts = JSON.parse(existingLead.contacts || '[]'); } catch { contacts = []; }
 
@@ -60,17 +60,25 @@ export async function POST(request: Request) {
             if (!alreadyHas) contacts.push(newContact);
           }
 
-          // Update with any new info
-          await sql`
-            UPDATE leads SET
-              contacts   = ${JSON.stringify(contacts)},
-              demo_url   = COALESCE(${demoUrl}, demo_url),
-              channel    = COALESCE(${channel}, channel),
-              email      = COALESCE(${email}, leads.email),
-              owner_name = COALESCE(${ownerName}, leads.owner_name),
-              updated_at = NOW()
-            WHERE id = ${existingLead.id}
-          `;
+          // Update with any new info — use individual fallback updates so missing columns don't break everything
+          try {
+            await sql`
+              UPDATE leads SET
+                demo_url   = COALESCE(${demoUrl}, demo_url),
+                channel    = COALESCE(${channel}, channel),
+                email      = COALESCE(${email}, email),
+                owner_name = COALESCE(${ownerName}, owner_name),
+                updated_at = NOW()
+              WHERE id = ${existingLead.id}
+            `;
+          } catch (e) {
+            console.error('Update error (non-contacts fields):', e);
+          }
+          // Try contacts separately (column may not exist yet)
+          try {
+            await sql`UPDATE leads SET contacts = ${JSON.stringify(contacts)} WHERE id = ${existingLead.id}`;
+          } catch { /* contacts column may not exist yet — run /api/migrate/leads-contacts */ }
+
           updated++;
           continue;
         }
@@ -109,22 +117,34 @@ export async function POST(request: Request) {
           if (!alreadyHas) contacts.push({ ...newContact, primary: contacts.length === 0 });
         }
 
+        const insertOwner = ownerName || (contacts[0]?.name as string) || null;
+        const insertEmail = email || (contacts[0]?.email as string) || null;
+        // Insert without contacts first (safe), then try to add contacts
         await sql`
-          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel, contacts)
+          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel)
           VALUES (
             ${id}, ${businessName},
-            ${ownerName || (contacts[0]?.name as string) || null},
-            ${email || (contacts[0]?.email as string) || null},
+            ${insertOwner},
+            ${insertEmail},
             ${mergedPhone},
             ${mergedWebsite},
             ${mergedCity},
             'created',
             'Imported from CSV',
             ${demoUrl},
-            ${channel},
-            ${JSON.stringify(contacts)}
+            ${channel}
           )
+          ON CONFLICT (id) DO UPDATE SET
+            demo_url   = COALESCE(EXCLUDED.demo_url, leads.demo_url),
+            channel    = COALESCE(EXCLUDED.channel, leads.channel),
+            email      = COALESCE(EXCLUDED.email, leads.email),
+            owner_name = COALESCE(EXCLUDED.owner_name, leads.owner_name),
+            updated_at = NOW()
         `;
+        // Try contacts separately
+        try {
+          await sql`UPDATE leads SET contacts = ${JSON.stringify(contacts)} WHERE id = ${id}`;
+        } catch { /* contacts column may not exist yet */ }
         imported++;
       } catch (error) {
         console.error('Import error for lead:', lead.business_name, error);
