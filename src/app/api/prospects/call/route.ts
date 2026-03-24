@@ -19,11 +19,15 @@ export async function POST(request: Request) {
     const baseUrl = 'https://fastflow-admin.vercel.app';
 
     const webhookUrl = `${baseUrl}/api/prospects/call-webhook?prospectId=${prospectId || 'test'}&companyName=${encodeURIComponent(companyName || 'Business')}`;
+    const statusCallbackUrl = `${baseUrl}/api/prospects/call-webhook?prospectId=${prospectId || 'test'}&companyName=${encodeURIComponent(companyName || 'Business')}&type=status`;
 
     const call = await client.calls.create({
       to: phone,
       from: fromNumber,
       url: webhookUrl,
+      statusCallback: statusCallbackUrl,
+      statusCallbackEvent: ['completed'],
+      statusCallbackMethod: 'POST',
       machineDetection: 'DetectMessageEnd',
       machineDetectionTimeout: 8,
       timeout: 20,

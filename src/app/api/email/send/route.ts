@@ -25,12 +25,12 @@ async function getZohoAccessToken() {
     body,
   });
 
-  const tokenData = await tokenResponse.json();
+  // Read body once — can't call both .json() and .text() on the same response
+  const tokenData = await tokenResponse.json().catch(() => ({}));
 
   if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    console.error('Zoho token HTTP error:', tokenResponse.status, errorText);
-    throw new Error(`Zoho OAuth HTTP ${tokenResponse.status}: ${errorText}`);
+    console.error('Zoho token HTTP error:', tokenResponse.status, JSON.stringify(tokenData));
+    throw new Error(`Zoho OAuth HTTP ${tokenResponse.status}: ${JSON.stringify(tokenData)}`);
   }
 
   if (tokenData.error) {

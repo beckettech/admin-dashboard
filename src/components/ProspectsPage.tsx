@@ -160,16 +160,39 @@ export function ProspectsPage() {
       if (!data.success) {
         setCallLog(prev => [`❌ Failed: ${prospect.company_name} — ${data.error}`, ...prev]);
         setCalling(null);
-      } else {
-        setTimeout(async () => {
-          await fetchProspects();
-          setCalling(p => p === prospect.id ? null : p);
-          setCallLog(prev => [`✓ Done: ${prospect.company_name}`, ...prev]);
-        }, 18000);
+        return null;
       }
+
+      // Poll every 3s until status changes from 'calling' (max 60s)
+      return await new Promise<string | null>((resolve) => {
+        let attempts = 0;
+        const poll = setInterval(async () => {
+          attempts++;
+          try {
+            const r = await fetch('/api/prospects');
+            const all = await r.json();
+            const updated: Prospect = (Array.isArray(all) ? all : []).find((p: Prospect) => p.id === prospect.id);
+            if (updated) setProspects(Array.isArray(all) ? all : []);
+            if (updated && updated.call_status && updated.call_status !== 'calling') {
+              clearInterval(poll);
+              setCalling(p => p === prospect.id ? null : p);
+              setCallLog(prev => [`✓ Done: ${prospect.company_name} — ${updated.call_status}`, ...prev]);
+              resolve(updated.call_status);
+            } else if (attempts >= 20) { // 60s max
+              clearInterval(poll);
+              setCalling(p => p === prospect.id ? null : p);
+              setCallLog(prev => [`✓ Done: ${prospect.company_name}`, ...prev]);
+              resolve(null);
+            }
+          } catch {
+            if (attempts >= 20) { clearInterval(poll); setCalling(null); resolve(null); }
+          }
+        }, 3000);
+      });
     } catch {
       setCallLog(prev => [`❌ Error calling ${prospect.company_name}`, ...prev]);
       setCalling(null);
+      return null;
     }
   };
 
@@ -180,7 +203,8 @@ export function ProspectsPage() {
     setCallLog([`🚀 Starting batch: ${uncalled.length} prospects...`]);
     for (const p of uncalled) {
       await callProspect(p);
-      await new Promise(r => setTimeout(r, 22000));
+      // 2s gap between calls
+      await new Promise(r => setTimeout(r, 2000));
     }
     setQueueRunning(false);
     setCallLog(prev => ['✅ Batch complete!', ...prev]);

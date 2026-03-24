@@ -66,6 +66,15 @@ const CALL_STATUS_LABELS: Record<string, { label: string; color: string; icon: s
   'failed': { label: 'Failed', color: 'text-red-400', icon: '❌' },
 };
 
+function getDemoTypeLabel(channel?: string | null): string {
+  if (!channel) return 'Web Chat';
+  const c = channel.toLowerCase();
+  if (c.includes('voice') || c.includes('inbound') || c.includes('outbound')) return 'Voice';
+  if (c.includes('facebook') || c.includes('instagram') || c.includes('social') || c.includes('organic') || c.includes('lead ads')) return 'Social';
+  if (c.includes('sms') || c.includes('text')) return 'SMS';
+  return 'Web Chat';
+}
+
 export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,8 +172,14 @@ export function LeadsPage() {
           else if (headerLower.includes('email') && !headerLower.includes('contact')) lead.email = v;
           else if (headerLower.includes('phone')) lead.phone = v;
           else if (headerLower === 'channel') lead.channel = v;
-          else if (headerLower.includes('demo url') || headerLower === 'demo_url') lead.demo_url = v;
-          else if (headerLower.includes('demo') && v.includes('/demo/')) { lead.demo_url = v; const m = v.match(/demo\/([a-f0-9-]+)/); if (m) lead.lead_id = m[1]; }
+          else if (headerLower.includes('demo url') || headerLower === 'demo_url' || headerLower === 'demo url') {
+            if (v && v.includes('/demo/')) {
+              lead.demo_url = v;
+              const m = v.match(/\/demo\/([a-f0-9-]{36})/);
+              if (m) lead.lead_id = m[1];
+            }
+          }
+          else if (headerLower === 'embed code' || headerLower.includes('embed')) { /* skip embed column */ }
         });
         return lead;
       }).filter(l => l.business_name);
@@ -205,7 +220,21 @@ export function LeadsPage() {
     }
   };
 
-  const demoLink = (lead: Lead) => `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=webchat`;
+  const channelToType = (channel?: string | null) => {
+    const c = (channel || '').toLowerCase();
+    if (c.includes('voice')) return 'voice';
+    if (c.includes('lead ad') || c.includes('leadad')) return 'lead_ads';
+    if (c.includes('organic')) return 'organic';
+    if (c.includes('facebook') || c.includes('instagram') || c.includes('social')) return 'social';
+    if (c.includes('sms') || c.includes('text')) return 'sms';
+    return 'webchat';
+  };
+  const demoLink = (lead: Lead) => {
+    const type = channelToType(lead.channel);
+    const params = new URLSearchParams({ lead: lead.id, business: lead.business_name, type });
+    if (lead.website) params.set('website', lead.website);
+    return `https://fastflow.bek-tech.com/api/demo?${params.toString()}`;
+  };
 
   const getLeadsByStage = (stage: string) => {
     let filtered = leads.filter(l => normalizeStatus(l.status) === stage);

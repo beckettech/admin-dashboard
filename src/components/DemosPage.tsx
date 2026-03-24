@@ -11,6 +11,11 @@ interface DemoView {
   website: string;
   demo_type: string;
   viewed_at: string;
+  prospect_phone?: string;
+  prospect_email?: string;
+  prospect_contact?: string;
+  prospect_location?: string;
+  prospect_niche?: string;
 }
 
 interface MergedDemo {
@@ -22,6 +27,11 @@ interface MergedDemo {
   last_viewed: string;
   first_viewed: string;
   view_ids: number[];
+  prospect_phone?: string;
+  prospect_email?: string;
+  prospect_contact?: string;
+  prospect_location?: string;
+  prospect_niche?: string;
 }
 
 export function DemosPage() {
@@ -51,6 +61,11 @@ export function DemosPage() {
               last_viewed: v.viewed_at,
               first_viewed: v.viewed_at,
               view_ids: [v.id],
+              prospect_phone: v.prospect_phone,
+              prospect_email: v.prospect_email,
+              prospect_contact: v.prospect_contact,
+              prospect_location: v.prospect_location,
+              prospect_niche: v.prospect_niche,
             });
           } else {
             const existing = grouped.get(key)!;
@@ -182,32 +197,63 @@ export function DemosPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{demo.business_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold truncate">{demo.business_name}</h3>
+                    {demo.prospect_phone && <span className="text-green-400 text-xs">🎯</span>}
+                  </div>
                   <p className="text-xs text-slate-500 mt-1">
                     Last: {formatDate(demo.last_viewed)}
                     {demo.view_count > 1 && (
                       <span className="ml-2 text-blue-400">• {demo.view_count} views</span>
                     )}
                   </p>
+                  {(demo.prospect_contact || demo.prospect_phone || demo.prospect_email) && (
+                    <div className="mt-2 space-y-1">
+                      {demo.prospect_contact && (
+                        <p className="text-xs text-slate-300">👤 {demo.prospect_contact}</p>
+                      )}
+                      {demo.prospect_phone && (
+                        <a href={`tel:${demo.prospect_phone}`} className="block text-xs text-green-400">
+                          📞 {demo.prospect_phone}
+                        </a>
+                      )}
+                      {demo.prospect_email && (
+                        <a href={`mailto:${demo.prospect_email}`} className="block text-xs text-blue-400 truncate">
+                          ✉️ {demo.prospect_email}
+                        </a>
+                      )}
+                      {demo.prospect_location && (
+                        <p className="text-xs text-slate-400">📍 {demo.prospect_location}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Badge variant="secondary" className="ml-2">
                   {demo.demo_type}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className={`grid gap-2 ${demo.prospect_phone ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <a
                   href={`https://fastflow.bek-tech.com/api/demo?lead=${demo.lead_id}&business=${encodeURIComponent(demo.business_name)}&website=${encodeURIComponent(demo.website || '')}&type=${demo.demo_type}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 h-11 bg-slate-800 rounded-xl text-slate-300 text-sm active:bg-slate-700"
+                  className="flex items-center justify-center gap-1 h-11 bg-slate-800 rounded-xl text-slate-300 text-sm active:bg-slate-700"
                 >
-                  👁️ View Demo
+                  👁️ View
                 </a>
+                {demo.prospect_phone && (
+                  <a
+                    href={`tel:${demo.prospect_phone}`}
+                    className="flex items-center justify-center gap-1 h-11 bg-green-900/40 rounded-xl text-green-400 text-sm active:bg-green-900/60"
+                  >
+                    📞 Call
+                  </a>
+                )}
                 <button
                   onClick={() => handleDeleteAll(demo.view_ids)}
-                  className="flex items-center justify-center gap-2 h-11 bg-slate-800 rounded-xl text-red-400 text-sm active:bg-slate-700"
+                  className="flex items-center justify-center gap-1 h-11 bg-slate-800 rounded-xl text-red-400 text-sm active:bg-slate-700"
                 >
-                  🗑️ Delete All
+                  🗑️ Delete
                 </button>
               </div>
             </div>

@@ -13,46 +13,54 @@ import {
 } from '@/components/ui/dialog';
 
 // ─── Niche configs ────────────────────────────────────────────
-const NICHES: Record<string, { label: string; industry: string; services: string[] }> = {
+const NICHES: Record<string, { label: string; industry: string; services: string[]; terminology: { bookAction: string; followUpItem: string } }> = {
   hvac: {
     label: 'HVAC',
     industry: 'HVAC companies',
     services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for maintenance, filters, etc.'],
+    terminology: { bookAction: 'book jobs', followUpItem: 'maintenance, filters, etc.' },
   },
   plumbing: {
     label: 'Plumbing',
     industry: 'plumbing companies',
     services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and maintenance'],
+    terminology: { bookAction: 'book jobs', followUpItem: 'inspections and maintenance' },
   },
   roofing: {
     label: 'Roofing',
     industry: 'roofing companies',
     services: ['answer calls, book inspections, handle storm season inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for estimates and annual inspections'],
+    terminology: { bookAction: 'book inspections', followUpItem: 'estimates and annual inspections' },
   },
   dental: {
     label: 'Dental',
     industry: 'dental practices',
     services: ['answer calls, book appointments, handle patient inquiries', 'never lose a patient when you front desk is busy', 'respond to social messages instantly', 'automated appointment reminders and follow-ups'],
+    terminology: { bookAction: 'book appointments', followUpItem: 'appointment reminders and follow-ups' },
   },
   restaurant: {
     label: 'Restaurant',
     industry: 'restaurants',
     services: ['answer calls, take reservations, handle menu questions', 'never miss a reservation or catering inquiry', 'respond to social messages instantly', 'automated review requests and loyalty follow-ups'],
+    terminology: { bookAction: 'take reservations', followUpItem: 'review requests and loyalty follow-ups' },
   },
   salon: {
     label: 'Salon / Spa',
     industry: 'salons and spas',
     services: ['answer calls, book appointments, handle service questions', 'never lose a booking when you\'re with a client', 'respond to social messages instantly', 'automated appointment reminders and rebooking follow-ups'],
+    terminology: { bookAction: 'book appointments', followUpItem: 'appointment reminders and rebooking' },
   },
   realestate: {
     label: 'Real Estate',
     industry: 'real estate agencies',
     services: ['answer calls, schedule showings, handle listing inquiries', 'never miss a buyer or seller lead', 'respond to social messages instantly', 'automated follow-ups for open houses and listings'],
+    terminology: { bookAction: 'schedule showings', followUpItem: 'open houses and listings' },
   },
   electrical: {
     label: 'Electrical',
     industry: 'electrical contractors',
     services: ['answer calls, book jobs, handle after-hours emergencies', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and panel upgrades'],
+    terminology: { bookAction: 'book jobs', followUpItem: 'inspections and panel upgrades' },
   },
 };
 
@@ -62,6 +70,8 @@ const DEMO_TYPES = [
   { value: 'voice', label: 'Voice Agent Demo' },
   { value: 'sms', label: 'SMS / Text-Back Demo' },
   { value: 'social', label: 'Social DM Demo' },
+  { value: 'lead_ads', label: 'Facebook Lead Ads Demo' },
+  { value: 'organic', label: 'Facebook Organic Demo' },
 ];
 
 // ─── Template builder ─────────────────────────────────────────
@@ -87,6 +97,8 @@ function buildEmail(p: {
     voice: { label: 'AI voice agents', plain: `answer calls, book jobs, handle after-hours inquiries`, html: `answer calls, book jobs, handle after-hours inquiries` },
     missed: { label: 'Missed call text-back', plain: `never lose a lead when you can't pick up`, html: `never lose a lead when you can't pick up` },
     social: { label: 'Facebook & Instagram DM automation', plain: `respond to social messages instantly`, html: `respond to social messages instantly` },
+    lead_ads: { label: 'Facebook Lead Ads AI', plain: `instantly text leads who click your ads and book them automatically`, html: `instantly text leads who click your ads and book them automatically` },
+    organic: { label: 'Facebook Organic auto-DM', plain: `auto-message everyone who comments on your posts`, html: `auto-message everyone who comments on your posts` },
     reminders: { label: 'Reorder & checkup reminders', plain: `automated follow-ups for maintenance, filters, etc.`, html: `automated follow-ups for maintenance, filters, etc.` },
     webchat: { label: 'AI webchat', plain: `answer questions and capture leads on your website 24/7`, html: `answer questions and capture leads on your website 24/7` },
     sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
@@ -99,20 +111,52 @@ function buildEmail(p: {
     ? ['voice', 'missed', 'webchat', 'reminders']
     : p.demoType === 'sms'
     ? ['voice', 'social', 'webchat', 'reminders']
+    : p.demoType === 'lead_ads'
+    ? ['voice', 'organic', 'webchat', 'missed']
+    : p.demoType === 'organic'
+    ? ['voice', 'lead_ads', 'webchat', 'missed']
     : /* webchat default */ ['voice', 'missed', 'social', 'reminders'];
 
-  const upsellItems = upsellOrder.map(k => ALL_OFFERS[k]);
+  // Apply niche-specific overrides to upsell items
+  const upsellItems = upsellOrder.map(k => {
+    const item = ALL_OFFERS[k];
+    if (k === 'reminders') {
+      return {
+        label: item.label,
+        plain: `automated follow-ups for ${niche.terminology.followUpItem}`,
+        html: `automated follow-ups for ${niche.terminology.followUpItem}`,
+      };
+    }
+    return item;
+  });
 
-  const subject = `${p.business} was selected for this Free ${demoLabel}`;
+  const subject = p.demoType === 'lead_ads'
+    ? `${p.business} — your Facebook leads are going cold (here's the fix)`
+    : p.demoType === 'organic'
+    ? `${p.business} — your Facebook commenters could be booking appointments`
+    : `${p.business} was selected for this Free ${demoLabel}`;
+
+  // Type-specific intro copy
+  const demoBodyLine = p.demoType === 'lead_ads'
+    ? `When someone clicks your Facebook ad and fills out a lead form, the worst thing that can happen is silence. Most businesses take hours — or days — to follow up, and by then the lead is gone.\n\nI built a demo that shows how ${p.business} could instantly text every new Facebook lead, ask a couple quick questions, and get them booked — automatically:`
+    : p.demoType === 'organic'
+    ? `Every time someone comments on one of your Facebook posts, that's a real person showing interest. Most businesses never follow up. I built a demo that shows how ${p.business} could auto-message every commenter, qualify them, and book appointments — without lifting a finger:`
+    : `I built a ${demoLabel.toLowerCase()} for ${p.business}:`;
+
+  const demoClosingLine = p.demoType === 'lead_ads'
+    ? `Play with the demo — it texts back, asks qualifying questions, and tries to book an appointment. This is exactly what would happen with your real Facebook leads.`
+    : p.demoType === 'organic'
+    ? `Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.`
+    : `It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.`;
 
   const bodyText = `Hi ${p.firstName},
 
 ${introText}${missedCallLine}
 
-I built a ${demoLabel.toLowerCase()} for ${p.business}:
+${demoBodyLine}
  ${p.demoLink}
 
-It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off the clock.
+${demoClosingLine}
 
 Beyond that, FastFlow also offers:
 ${upsellItems.map(i => `- ${i.label} — ${i.plain}`).join('\n')}
@@ -126,13 +170,28 @@ Beck Hoefling`;
   const introHtml = p.isLocal
     ? `My name is Beck. I'm a SWFL local (Cape Coral). My company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`
     : `My name is Beck and my company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`;
+
+  const demoBodyHtml = p.demoType === 'lead_ads'
+    ? `<p>When someone clicks your Facebook ad and fills out a lead form, the worst thing that can happen is silence. Most businesses take hours — or days — to follow up, and by then the lead is gone.</p>
+  <p>I built a demo that shows how <strong>${p.business}</strong> could instantly text every new Facebook lead, ask a couple quick questions, and get them booked — automatically:</p>`
+    : p.demoType === 'organic'
+    ? `<p>Every time someone comments on one of your Facebook posts, that's a real person showing interest. Most businesses never follow up.</p>
+  <p>I built a demo that shows how <strong>${p.business}</strong> could auto-message every commenter, qualify them, and book appointments — without lifting a finger:</p>`
+    : `<p>I built a ${demoLabel.toLowerCase()} for <strong>${p.business}</strong>:</p>`;
+
+  const demoClosingHtml = p.demoType === 'lead_ads'
+    ? `<p>Play with the demo — it texts back, asks qualifying questions, and tries to book an appointment. This is exactly what would happen with your real Facebook leads.</p>`
+    : p.demoType === 'organic'
+    ? `<p>Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.</p>`
+    : `<p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.</p>`;
+
   const bodyHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
   <p>Hi ${p.firstName},</p>
   <p>${introHtml}</p>
   ${missedCallHtml}
-  <p>I built a ${demoLabel.toLowerCase()} for <strong>${p.business}</strong>:</p>
+  ${demoBodyHtml}
   <p><a href="${p.demoLink}" target="_blank" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">${p.business}'s Custom Demo →</a></p>
-  <p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and book jobs even when your team's off the clock.</p>
+  ${demoClosingHtml}
   <p>Beyond that, FastFlow also offers:</p>
   <ul style="padding-left:20px;margin:8px 0;">
     ${upsellItems.map(i => `<li><strong>${i.label}</strong> — ${i.html}</li>`).join('\n    ')}
@@ -146,12 +205,44 @@ Beck Hoefling`;
   return { subject, text: bodyText, html: bodyHtml };
 }
 
+// ─── DM / Text Message builder ─────────────────────────────────
+function buildDM(p: {
+  firstName: string;
+  business: string;
+  demoLink: string;
+  niche: string;
+  demoType: string;
+  isLocal: boolean;
+}) {
+  const niche = NICHES[p.niche] || NICHES.hvac;
+  const demoLabel = DEMO_TYPES.find(d => d.value === p.demoType)?.label || 'Demo';
+  const localIntro = p.isLocal ? 'SWFL local here ' : '';
+
+  const lines = [
+    `Hey there! ${localIntro}Beck from FastFlow.`,
+    ``,
+    `I built an ${demoLabel.toLowerCase()} for ${p.business} showing how AI could ${niche.terminology.bookAction} and capture leads 24/7:`,
+    p.demoLink,
+    ``,
+    `Would love to get your thoughts on the demo.`,
+    ``,
+    `Beyond that, FastFlow also offers:`,
+    `- Missed call text-back`,
+    `- Facebook & Instagram DM automation`,
+    `- ${niche.terminology.followUpItem.charAt(0).toUpperCase() + niche.terminology.followUpItem.slice(1)} reminders`,
+  ];
+
+  return lines.join('\n').trim();
+}
+
 // ─── Channel → demo type mapping ─────────────────────────────
 function channelToDemoType(channel?: string | null): string {
   if (!channel) return 'webchat';
   const c = channel.toLowerCase();
   if (c.includes('voice') || c.includes('inbound') || c.includes('outbound')) return 'voice';
-  if (c.includes('facebook') || c.includes('instagram') || c.includes('social') || c.includes('organic') || c.includes('lead ads')) return 'social';
+  if (c.includes('lead ad') || c.includes('lead_ad') || c.includes('leadad')) return 'lead_ads';
+  if (c.includes('organic')) return 'organic';
+  if (c.includes('facebook') || c.includes('instagram') || c.includes('social')) return 'social';
   if (c.includes('sms') || c.includes('text')) return 'sms';
   return 'webchat';
 }
@@ -177,8 +268,45 @@ interface Lead {
   notes: string | null;
   created_at: string;
   demo_url?: string | null;
+  website?: string | null;
   channel?: string | null;
   contacts?: LeadContact[] | string | null;
+}
+
+// Convert a raw demo URL (e.g. demos.fastflow.bek-tech.com/demo/<uuid>)
+// into a branded FastFlow tracking link with lead metadata.
+function toBrandedDemoUrl(lead: { id: string; business_name: string; website?: string | null }, demoType: string, rawUrl?: string | null): string {
+  const base = `https://fastflow.bek-tech.com/api/demo`;
+  const params = new URLSearchParams({
+    lead: lead.id,
+    business: lead.business_name,
+    ...(lead.website ? { website: lead.website } : {}),
+    type: demoType,
+  });
+
+  // If already a branded link, just update the type param
+  if (rawUrl && rawUrl.includes('fastflow.bek-tech.com/api/demo')) {
+    const url = new URL(rawUrl);
+    url.searchParams.set('type', demoType);
+    if (lead.website) url.searchParams.set('website', lead.website);
+    return url.toString();
+  }
+
+  // If it's a demos.fastflow link, extract the UUID and rebuild
+  if (rawUrl && rawUrl.includes('demos.fastflow.bek-tech.com/demo/')) {
+    const match = rawUrl.match(/\/demo\/([a-f0-9-]{36})/);
+    const uuid = match ? match[1] : lead.id;
+    const p2 = new URLSearchParams({
+      lead: uuid,
+      business: lead.business_name,
+      ...(lead.website ? { website: lead.website } : {}),
+      type: demoType,
+    });
+    return `${base}?${p2.toString()}`;
+  }
+
+  // Fallback: build from lead data
+  return `${base}?${params.toString()}`;
 }
 
 function parseContacts(lead: Lead): LeadContact[] {
@@ -205,6 +333,8 @@ export function TemplatesPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [previewMode, setPreviewMode] = useState<'html' | 'dm'>('html');
+  const [copied, setCopied] = useState(false);
 
   const [fields, setFields] = useState({
     toEmail: '',
@@ -234,7 +364,8 @@ export function TemplatesPage() {
     const firstName = nameParts[0] || 'there';
     const detectedType = channelToDemoType(lead.channel);
     setDemoType(detectedType);
-    setMissedCall(detectedType === 'voice');
+    // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
+    setMissedCall(lead.call_status === 'no_answer');
     setSelectedContactIdx(contactIdx);
     const contactEmail = (contact?.email && contact.email.includes('@')) ? contact.email : (lead.email || '');
     setFields({
@@ -242,7 +373,7 @@ export function TemplatesPage() {
       toName: cleanName,
       firstName,
       business: lead.business_name || '',
-      demoLink: lead.demo_url || `https://fastflow.bek-tech.com/api/demo?lead=${lead.id}&business=${encodeURIComponent(lead.business_name)}&type=${detectedType}`,
+      demoLink: toBrandedDemoUrl(lead, detectedType, lead.demo_url),
     });
   };
 
@@ -260,6 +391,7 @@ export function TemplatesPage() {
   };
 
   const email = buildEmail({ ...fields, niche, demoType, isLocal, missedCall });
+  const dmMessage = buildDM({ ...fields, niche, demoType, isLocal });
 
   const send = async () => {
     if (!fields.toEmail) { setError('No email address for this lead'); return; }
@@ -280,12 +412,12 @@ export function TemplatesPage() {
       const data = await res.json();
       if (data.success) {
         setSent(true);
-        // Mark email_sent on the lead
+        // Mark email_sent and move to "Demo Sent" stage in pipeline
         if (selectedLeadId) {
           await fetch(`/api/leads/${selectedLeadId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email_sent: true }),
+            body: JSON.stringify({ email_sent: true, status: 'sent' }),
           });
         }
       } else {
@@ -317,7 +449,7 @@ export function TemplatesPage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
               >
                 <option value="">— pick a lead —</option>
-                {leads.map(l => (
+                {leads.filter(l => !['sent', 'not_interested', 'used'].includes(l.status)).map(l => (
                   <option key={l.id} value={l.id}>
                     {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
                   </option>
@@ -365,7 +497,7 @@ export function TemplatesPage() {
               <div className="flex items-center justify-between py-1">
                 <div>
                   <Label>After-Hours Line</Label>
-                  <p className="text-xs text-slate-500 mt-0.5">Auto-on for voice demos. Inserts missed call sentence in intro.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Auto-on when call_status = no_answer. Manual override available.</p>
                 </div>
                 <button
                   onClick={() => setMissedCall(v => !v)}
@@ -391,12 +523,13 @@ export function TemplatesPage() {
                 <select
                   value={demoType}
                   onChange={e => {
-                    setDemoType(e.target.value);
-                    // Update demo link type param if it's an auto-generated link
-                    if (fields.demoLink.includes('fastflow.bek-tech.com/api/demo')) {
+                    const newType = e.target.value;
+                    setDemoType(newType);
+                    const lead = leads.find(l => l.id === selectedLeadId);
+                    if (lead) {
                       setFields(f => ({
                         ...f,
-                        demoLink: f.demoLink.replace(/&type=[^&]*/, `&type=${e.target.value}`),
+                        demoLink: toBrandedDemoUrl(lead, newType, f.demoLink),
                       }));
                     }
                   }}
@@ -464,16 +597,40 @@ export function TemplatesPage() {
         <div className="lg:col-span-3">
           <Card className="h-full">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Preview</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Preview</CardTitle>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPreviewMode('html')}
+                    className={`px-3 py-1 rounded text-xs font-medium transition ${previewMode === 'html' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                  >HTML Email</button>
+                  <button
+                    onClick={() => setPreviewMode('dm')}
+                    className={`px-3 py-1 rounded text-xs font-medium transition ${previewMode === 'dm' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                  >DM / Text</button>
+                  {previewMode === 'dm' && (
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(dmMessage); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                      className="px-3 py-1 rounded text-xs font-medium bg-green-600 hover:bg-green-500 text-white transition"
+                    >{copied ? '✓ Copied!' : '📋 Copy'}</button>
+                  )}
+                </div>
+              </div>
               <CardDescription className="text-xs break-all">
                 <span className="text-slate-400">To:</span> {fields.toName ? `${fields.toName} ` : ''}{fields.toEmail}<br/>
                 <span className="text-slate-400">Subject:</span> {email.subject}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="bg-white rounded-lg p-4" style={{ minHeight: '500px' }}>
-                <div dangerouslySetInnerHTML={{ __html: email.html }} />
-              </div>
+              {previewMode === 'html' ? (
+                <div className="bg-white rounded-lg p-4" style={{ minHeight: '500px' }}>
+                  <div dangerouslySetInnerHTML={{ __html: email.html }} />
+                </div>
+              ) : (
+                <div className="bg-slate-900 rounded-lg p-4 font-sans text-sm text-slate-200 whitespace-pre-wrap" style={{ minHeight: '200px' }}>
+                  {dmMessage}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

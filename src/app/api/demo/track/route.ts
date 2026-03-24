@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { logDemoView } from '@/lib/db';
+import { logDemoView, matchAndConsumeProspect } from '@/lib/db';
 
 export async function POST(request: Request) {
   try {
@@ -31,36 +31,56 @@ export async function POST(request: Request) {
       new TextEncoder().encode(ip + process.env.IP_HASH_SALT || 'fastflow-salt')
     ).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
     
-    // Log to database
+    // Fuzzy-match against prospects — if matched, consume the prospect
+    const prospectMatch = await matchAndConsumeProspect(business || 'Unknown Business');
+
+    // Log to database (with prospect data if matched)
     await logDemoView({
       lead_id: lead,
       business_name: business || 'Unknown Business',
       website: website || '',
       demo_type: type || 'webchat',
-      ip_hash: ipHash.slice(0, 16), // First 16 chars is enough for uniqueness
+      ip_hash: ipHash.slice(0, 16),
       user_agent: userAgent.slice(0, 500),
+      ...(prospectMatch.matched && prospectMatch.prospect ? {
+        prospect_id: prospectMatch.prospect.id,
+        prospect_phone: prospectMatch.prospect.phone || undefined,
+        prospect_email: prospectMatch.prospect.email || undefined,
+        prospect_contact: prospectMatch.prospect.contact || undefined,
+        prospect_location: prospectMatch.prospect.location || undefined,
+        prospect_niche: prospectMatch.prospect.niche || undefined,
+      } : {}),
     });
     
     // Also send to Discord (notify in the specified channel)
     const discordWebhook = process.env.DISCORD_WEBHOOK_DEMO_VIEWS;
     if (discordWebhook) {
       const demoLink = `https://fastflow.bek-tech.com/api/demo?lead=${lead}&business=${encodeURIComponent(business || 'Unknown')}&website=${encodeURIComponent(website || '')}&type=${type || 'webchat'}`;
+      const matched = prospectMatch.matched && prospectMatch.prospect;
+      const fields = [
+        { name: 'Business', value: business || 'Unknown', inline: true },
+        { name: 'Type', value: type || 'webchat', inline: true },
+        { name: 'Lead ID', value: lead || 'Unknown', inline: true },
+        { name: 'Website', value: website ? `[${website}](${website})` : 'N/A', inline: false },
+      ];
+      if (matched) {
+        if (prospectMatch.prospect!.prospect_phone) fields.push({ name: '📞 Phone', value: prospectMatch.prospect!.prospect_phone!, inline: true });
+        if (prospectMatch.prospect!.email) fields.push({ name: '📧 Email', value: prospectMatch.prospect!.email!, inline: true });
+        if (prospectMatch.prospect!.contact) fields.push({ name: '👤 Contact', value: prospectMatch.prospect!.contact!, inline: true });
+      }
 
       await fetch(discordWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: `<#1481014187915477082> 🔍 **Demo Opened** — Check dashboard to categorize!`,
+          content: matched
+            ? `🎯 **Prospect Matched & Demo Opened** — ${prospectMatch.prospect!.company_name} viewed the demo!`
+            : `🔍 **Demo Opened** — Check dashboard to categorize!`,
           embeds: [{
             title: `${business || 'Unknown Business'}`,
             url: demoLink,
-            fields: [
-              { name: 'Business', value: business || 'Unknown', inline: true },
-              { name: 'Type', value: type || 'webchat', inline: true },
-              { name: 'Lead ID', value: lead || 'Unknown', inline: true },
-              { name: 'Website', value: website ? `[${website}](${website})` : 'N/A', inline: false }
-            ],
-            color: 3447003,
+            fields,
+            color: matched ? 5763719 : 3447003, // green if matched, blue otherwise
             timestamp: new Date().toISOString()
           }]
         })

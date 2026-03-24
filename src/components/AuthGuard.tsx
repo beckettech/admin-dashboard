@@ -13,7 +13,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       .then((data) => {
         setAuthenticated(data.authenticated);
         if (!data.authenticated) {
-          router.push('/login');
+          router.replace('/login');
         }
       })
       .catch(() => setAuthenticated(false));
