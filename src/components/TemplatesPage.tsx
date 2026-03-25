@@ -449,7 +449,7 @@ export function TemplatesPage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
               >
                 <option value="">— pick a lead —</option>
-                {leads.filter(l => !['sent', 'not_interested', 'used'].includes(l.status)).map(l => (
+                {leads.filter(l => l.status === 'created').map(l => (
                   <option key={l.id} value={l.id}>
                     {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
                   </option>
