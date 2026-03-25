@@ -33,10 +33,10 @@ export async function POST(request: Request) {
       timeout: 20,
     });
 
-    // Mark as calling
+    // Mark as calling — ever_called is permanent and never resets
     if (prospectId && prospectId !== 'test') {
       await sql`
-        UPDATE prospects SET call_status = 'calling', called_at = NOW()
+        UPDATE prospects SET call_status = 'calling', called_at = NOW(), ever_called = TRUE
         WHERE id = ${prospectId}
       `;
     }

@@ -29,6 +29,7 @@ export async function GET() {
     await sql`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS call_transcript TEXT`;
     await sql`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS call_result TEXT`;
     await sql`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS scheduled_call_time TIMESTAMP`;
+    await sql`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS ever_called BOOLEAN DEFAULT FALSE`;
 
     return NextResponse.json({ success: true, message: 'Prospects table ready' });
   } catch (error) {

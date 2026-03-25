@@ -22,6 +22,7 @@ interface Prospect {
   called_at: string | null;
   scheduled_call_time: string | null;
   notes: string | null;
+  ever_called: boolean | null;
 }
 
 const CALL_STATUS: Record<string, { label: string; color: string; icon: string }> = {
@@ -197,7 +198,8 @@ export function ProspectsPage() {
   };
 
   const runQueueNow = async () => {
-    const uncalled = prospects.filter(p => p.phone && (!p.call_status || p.call_status === 'uncalled'));
+    // ever_called is a permanent flag — never re-call even if call_status was reset
+    const uncalled = prospects.filter(p => p.phone && !p.ever_called);
     if (!uncalled.length) { alert('No uncalled prospects with phone numbers'); return; }
     setQueueRunning(true);
     setCallLog([`🚀 Starting batch: ${uncalled.length} prospects...`]);
@@ -214,7 +216,7 @@ export function ProspectsPage() {
   const scheduleAll = () => {
     if (!scheduleAllTime) return;
     const startTime = new Date(scheduleAllTime).getTime();
-    const uncalled = prospects.filter(p => p.phone && (!p.call_status || p.call_status === 'uncalled'));
+    const uncalled = prospects.filter(p => p.phone && !p.ever_called);
     if (!uncalled.length) { alert('No uncalled prospects'); return; }
 
     // Schedule each with 30s gap
@@ -295,7 +297,7 @@ export function ProspectsPage() {
 
   const stats = {
     total: prospects.length,
-    uncalled: prospects.filter(p => !p.call_status || p.call_status === 'uncalled').length,
+    uncalled: prospects.filter(p => !p.ever_called).length,
     voicemail: prospects.filter(p => p.call_status === 'voicemail').length,
     human: prospects.filter(p => p.call_status === 'human').length,
   };
