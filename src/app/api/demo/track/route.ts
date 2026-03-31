@@ -64,9 +64,9 @@ export async function POST(request: Request) {
         { name: 'Website', value: website ? `[${website}](${website})` : 'N/A', inline: false },
       ];
       if (matched) {
-        if (prospectMatch.prospect!.prospect_phone) fields.push({ name: '📞 Phone', value: prospectMatch.prospect!.prospect_phone!, inline: true });
-        if (prospectMatch.prospect!.email) fields.push({ name: '📧 Email', value: prospectMatch.prospect!.email!, inline: true });
-        if (prospectMatch.prospect!.contact) fields.push({ name: '👤 Contact', value: prospectMatch.prospect!.contact!, inline: true });
+        if (matched.phone) fields.push({ name: '📞 Phone', value: matched.phone, inline: true });
+        if (matched.email) fields.push({ name: '📧 Email', value: matched.email, inline: true });
+        if (matched.contact) fields.push({ name: '👤 Contact', value: matched.contact, inline: true });
       }
 
       await fetch(discordWebhook, {
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: matched
-            ? `🎯 **Prospect Matched & Demo Opened** — ${prospectMatch.prospect!.company_name} viewed the demo!`
+            ? `🎯 **Prospect Matched & Demo Opened** — ${matched.company_name} viewed the demo!`
             : `🔍 **Demo Opened** — Check dashboard to categorize!`,
           embeds: [{
             title: `${business || 'Unknown Business'}`,
