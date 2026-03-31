@@ -65,7 +65,8 @@ export async function POST() {
               website = COALESCE(website, ${p.website}),
               city = COALESCE(city, ${p.location}),
               call_status = COALESCE(call_status, ${p.call_status}),
-              called_at = COALESCE(called_at, ${p.called_at})
+              called_at = COALESCE(called_at, ${p.called_at}),
+              niche = COALESCE(niche, ${p.niche})
             WHERE id = ${match.id}
           `;
 

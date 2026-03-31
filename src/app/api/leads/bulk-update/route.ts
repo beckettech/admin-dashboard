@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+import { sql } from '@vercel/postgres';
+
+// Auto-assign niche to all leads
+export async function POST() {
+  try {
+    const niches: Record<string, string[]> = {
+      hvac: ['hvac', 'air conditioning', 'heating', 'cooling', 'ac', 'ventilation', 'air duct', 'climate control', 'conditioning'],
+      plumbing: ['plumbing', 'plumber', 'pipe', 'drain', 'sewer', 'water heater', 'bathroom', 'toilet'],
+      electrical: ['electrical', 'electrician', 'electric', 'wire', 'circuit', 'panel', 'lighting'],
+      roofing: ['roofing', 'roof', 'shingle', 'gutter', 'siding'],
+      dental: ['dental', 'dentist', 'orthodontist', 'teeth'],
+      restaurant: ['restaurant', 'catering', 'food', 'cafe', 'diner', 'grill'],
+      salon: ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty'],
+      'realestate': ['real estate', 'realtor', 'property', 'apartment', 'condo'],
+    };
+
+    const leads = await sql`SELECT id, business_name, niche FROM leads`;
+    let updated = 0;
+
+    for (const lead of leads.rows) {
+      const name = (lead.business_name || '').toLowerCase();
+      let assignedNiche = null;
+
+      for (const [niche, keywords] of Object.entries(niches)) {
+        if (keywords.some(kw => name.includes(kw))) {
+          assignedNiche = niche;
+          break;
+        }
+      }
+
+      // Only update if niche changed or not set
+      if (assignedNiche !== lead.niche) {
+        await sql`UPDATE leads SET niche = ${assignedNiche} WHERE id = ${lead.id}`;
+        updated++;
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      updated,
+      totalLeads: leads.rows.length,
+    });
+  } catch (error) {
+    console.error('Bulk update error:', error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
+}

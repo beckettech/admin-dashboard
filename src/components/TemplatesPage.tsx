@@ -271,6 +271,7 @@ interface Lead {
   website?: string | null;
   channel?: string | null;
   contacts?: LeadContact[] | string | null;
+  niche?: string | null;
 }
 
 // Convert a raw demo URL (e.g. demos.fastflow.bek-tech.com/demo/<uuid>)
@@ -364,6 +365,8 @@ export function TemplatesPage() {
     const firstName = nameParts[0] || 'there';
     const detectedType = channelToDemoType(lead.channel);
     setDemoType(detectedType);
+    // Auto-detect niche from lead if set, otherwise use current selection
+    if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
     setSelectedContactIdx(contactIdx);
@@ -449,7 +452,7 @@ export function TemplatesPage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
               >
                 <option value="">— pick a lead —</option>
-                {leads.filter(l => l.status === 'created').map(l => (
+                {leads.filter(l => !['opened', 'sent', 'not_interested', 'used'].includes(l.status)).map(l => (
                   <option key={l.id} value={l.id}>
                     {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
                   </option>
@@ -474,6 +477,21 @@ export function TemplatesPage() {
                           {c.email && <span className="block text-xs opacity-70">{c.email}</span>}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                );
+              })()}
+              {/* Selected lead info */}
+              {selectedLeadId && (() => {
+                const lead = leads.find(l => l.id === selectedLeadId);
+                if (!lead) return null;
+                const callStatusLabel = lead.call_status === 'no_answer' ? '🎯 No Answer' : lead.call_status === 'human' ? '✅ Has Coverage' : null;
+                return (
+                  <div className="mt-2 pt-2 border-t border-slate-700">
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      {lead.niche && <span className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full capitalize">🏷️ {lead.niche}</span>}
+                      {callStatusLabel && <span className={lead.call_status === 'no_answer' ? 'text-orange-400' : 'text-green-400'}>{callStatusLabel}</span>}
+                      {lead.city && <span className="text-slate-400">{lead.city}</span>}
                     </div>
                   </div>
                 );

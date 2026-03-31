@@ -35,6 +35,7 @@ interface Lead {
   channel?: string | null;
   contacts?: LeadContact[] | null;
   demo_viewed_at?: string | null;
+  niche?: string | null;
 }
 
 const PIPELINE_STAGES = [
@@ -124,6 +125,7 @@ export function LeadsPage() {
         email: formData.get('email') || null,
         phone: formData.get('phone') || null,
         city: formData.get('city') || null,
+        niche: formData.get('niche') || null,
         status: 'created',
       }),
     });
@@ -367,12 +369,13 @@ export function LeadsPage() {
                   {getLeadsByStage(stage.id).map((lead) => {
                     const callInfo = getCallStatusLabel(lead.call_status);
                     return (
-                      <div 
-                        key={lead.id} 
+                      <div
+                        key={lead.id}
                         onClick={() => setSelectedLead(lead)}
                         className="bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700 transition-colors"
                       >
                         <div className="font-medium text-sm truncate">{lead.business_name}</div>
+                        {lead.niche && <div className="text-xs text-blue-400 mt-1 capitalize">🏷️ {lead.niche}</div>}
                         {lead.city && <div className="text-xs text-slate-400 mt-1">{lead.city}</div>}
                         {callInfo && (
                           <div className={`text-xs mt-1 ${callInfo.color}`}>
@@ -411,6 +414,7 @@ export function LeadsPage() {
               <div className="space-y-4">
                 {/* Business info */}
                 <div className="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
+                  {selectedLead.niche && <p><span className="text-slate-400">Niche:</span> <span className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs capitalize">{selectedLead.niche}</span></p>}
                   {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}
                   {selectedLead.website && <p><span className="text-slate-400">Website:</span> <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.website}</a></p>}
                   {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
@@ -481,6 +485,20 @@ export function LeadsPage() {
             <div className="grid grid-cols-2 gap-2">
               <div><Label>Email</Label><Input name="email" className="h-10" /></div>
               <div><Label>Phone</Label><Input name="phone" className="h-10" /></div>
+            </div>
+            <div>
+              <Label>Niche</Label>
+              <select name="niche" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 h-10 text-sm text-white">
+                <option value="">Auto-detect</option>
+                <option value="hvac">HVAC</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="electrical">Electrical</option>
+                <option value="roofing">Roofing</option>
+                <option value="dental">Dental</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="salon">Salon / Spa</option>
+                <option value="realestate">Real Estate</option>
+              </select>
             </div>
             <Button className="w-full h-10">Create</Button>
           </form>

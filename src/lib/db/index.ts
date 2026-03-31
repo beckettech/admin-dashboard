@@ -190,10 +190,11 @@ export async function createLead(data: {
   google_review_link?: string;
   yelp_review_link?: string;
   notes?: string;
+  niche?: string;
 }) {
   const result = await sql`
-    INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, google_review_link, yelp_review_link, notes)
-    VALUES (${data.id}, ${data.business_name}, ${data.owner_name || null}, ${data.email || null}, ${data.phone || null}, ${data.website || null}, ${data.city || null}, ${data.google_review_link || null}, ${data.yelp_review_link || null}, ${data.notes || null})
+    INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, google_review_link, yelp_review_link, notes, niche)
+    VALUES (${data.id}, ${data.business_name}, ${data.owner_name || null}, ${data.email || null}, ${data.phone || null}, ${data.website || null}, ${data.city || null}, ${data.google_review_link || null}, ${data.yelp_review_link || null}, ${data.notes || null}, ${data.niche || null})
     RETURNING *
   `;
   return result.rows[0];
@@ -213,14 +214,15 @@ export async function updateLead(id: string, data: Partial<{
   demo_url: string;
   email_sent: boolean;
   text_sent: boolean;
+  niche: string;
 }>) {
   const fields = Object.entries(data)
     .filter(([_, v]) => v !== undefined)
     .map(([k, v], i) => `${k} = $${i + 2}`)
     .join(', ');
-  
+
   if (!fields) return getLead(id);
-  
+
   const values = [id, ...Object.values(data).filter(v => v !== undefined)];
   const result = await sql.query(
     `UPDATE leads SET ${fields}, updated_at = NOW() WHERE id = $1 RETURNING *`,
