@@ -472,8 +472,10 @@ export function TemplatesPage() {
               >
                 <option value="">— pick a lead —</option>
                 {leads
-                  .filter(l => !excludedStatuses.includes(l.status))
-                  .filter(l => !excludedStatuses.includes(normalizeStatus(l.status)))
+                  .filter(l => {
+                    const normalized = normalizeStatus(l.status);
+                    return normalized === 'created';
+                  })
                   .map(l => (
                   <option key={l.id} value={l.id}>
                     {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
