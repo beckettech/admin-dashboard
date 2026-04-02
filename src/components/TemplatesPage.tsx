@@ -345,6 +345,25 @@ export function TemplatesPage() {
     demoLink: '',
   });
 
+  // Status normalization (same as LeadsPage)
+  const normalizeStatus = (status: string) => {
+    const STATUS_MAP: Record<string, string> = {
+      'found': 'created',
+      'building': 'created',
+      'draft': 'created',
+      'approved': 'sent',
+      'pitched': 'opened',
+      'responded': 'followed_up',
+      'closed': 'sold',
+      'passed': 'not_interested',
+      'archived': 'not_interested',
+    };
+    return STATUS_MAP[status] || status;
+  };
+
+  // Exclude leads that are already processed (sent, opened, used, not interested, sold, followed up)
+  const excludedStatuses = ['sent', 'opened', 'used', 'not_interested', 'sold', 'followed_up', 'pitched', 'approved', 'responded', 'closed', 'passed', 'archived'];
+
   useEffect(() => {
     fetch('/api/leads')
       .then(r => r.json())
@@ -452,7 +471,10 @@ export function TemplatesPage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
               >
                 <option value="">— pick a lead —</option>
-                {leads.filter(l => !['opened', 'sent', 'not_interested', 'used'].includes(l.status)).map(l => (
+                {leads
+                  .filter(l => !excludedStatuses.includes(l.status))
+                  .filter(l => !excludedStatuses.includes(normalizeStatus(l.status)))
+                  .map(l => (
                   <option key={l.id} value={l.id}>
                     {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
                   </option>
