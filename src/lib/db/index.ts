@@ -215,6 +215,9 @@ export async function updateLead(id: string, data: Partial<{
   email_sent: boolean;
   text_sent: boolean;
   niche: string;
+  bounce_status: string | null;
+  bounce_reason: string | null;
+  bounce_count: number;
 }>) {
   const fields = Object.entries(data)
     .filter(([_, v]) => v !== undefined)

@@ -272,6 +272,8 @@ interface Lead {
   channel?: string | null;
   contacts?: LeadContact[] | string | null;
   niche?: string | null;
+  bounce_status?: string | null;
+  bounce_reason?: string | null;
 }
 
 // Convert a raw demo URL (e.g. demos.fastflow.bek-tech.com/demo/<uuid>)
@@ -432,7 +434,11 @@ export function TemplatesPage() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
+
+      if (res.status === 409) {
+        // Previously bounced - don't send
+        setError(`⚠️ Email previously bounced: ${data.reason || 'Unknown error'}. Click "Reset Bounce" in lead details to try again.`);
+      } else if (data.success) {
         setSent(true);
         // Mark email_sent and move to "Demo Sent" stage in pipeline
         if (selectedLeadId) {
@@ -474,11 +480,11 @@ export function TemplatesPage() {
                 {leads
                   .filter(l => {
                     const normalized = normalizeStatus(l.status);
-                    return normalized === 'created';
+                    return normalized === 'created' && l.bounce_status !== 'bounced';
                   })
                   .map(l => (
                   <option key={l.id} value={l.id}>
-                    {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}
+                    {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}{l.bounce_status === 'bounced' ? ' ❌' : ''}
                   </option>
                 ))}
               </select>

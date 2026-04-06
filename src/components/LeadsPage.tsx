@@ -36,6 +36,9 @@ interface Lead {
   contacts?: LeadContact[] | null;
   demo_viewed_at?: string | null;
   niche?: string | null;
+  bounce_status?: string | null;
+  bounce_reason?: string | null;
+  bounce_count?: number | null;
 }
 
 const PIPELINE_STAGES = [
@@ -275,7 +278,7 @@ export function LeadsPage() {
         <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : 'Call Log'}</h1>
         <div className="flex gap-2 flex-wrap">
           {activeTab === 'pipeline' && noAnswerCount > 0 && (
-            <Button 
+            <Button
               variant={showNoAnswerOnly ? 'default' : 'outline'}
               onClick={() => setShowNoAnswerOnly(!showNoAnswerOnly)}
               className="h-10 px-4 text-sm"
@@ -325,7 +328,7 @@ export function LeadsPage() {
                 {calledLeads.map((lead) => {
                   const callInfo = getCallStatusLabel(lead.call_status);
                   return (
-                    <div 
+                    <div
                       key={lead.id}
                       onClick={() => setSelectedLead(lead)}
                       className="bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700 transition-colors flex items-center justify-between"
@@ -382,9 +385,14 @@ export function LeadsPage() {
                             {callInfo.icon} {callInfo.label}
                           </div>
                         )}
+                        {lead.bounce_status === 'bounced' && (
+                          <div className="text-xs text-red-400 mt-1">
+                            ❌ Email bounced: {lead.bounce_reason || 'Unknown'}
+                          </div>
+                        )}
                         <div className="flex gap-1 mt-2">
                           {lead.phone && <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">📞</a>}
-                          {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">✉️</a>}
+                          {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className={`text-xs px-2 py-1 rounded ${lead.bounce_status === 'bounced' ? 'bg-red-900 text-red-300' : 'bg-slate-700'}`}>✉️</a>}
                           <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(demoLink(lead)); alert('Copied!'); }} className="text-xs px-2 py-1 bg-slate-700 rounded">🔗</button>
                         </div>
                       </div>
@@ -423,6 +431,13 @@ export function LeadsPage() {
                   {selectedLead.demo_viewed_at && <p><span className="text-slate-400">Demo Viewed:</span> {new Date(selectedLead.demo_viewed_at).toLocaleDateString()}</p>}
                   {callInfo && <p><span className="text-slate-400">Call:</span> <span className={callInfo.color}>{callInfo.icon} {callInfo.label}</span>{selectedLead.called_at ? ` · ${new Date(selectedLead.called_at).toLocaleDateString()}` : ''}</p>}
                   {selectedLead.notes && <p><span className="text-slate-400">Notes:</span> {selectedLead.notes}</p>}
+                  {selectedLead.bounce_status === 'bounced' && (
+                    <div className="bg-red-900/20 rounded-lg p-2 border border-red-800">
+                      <p className="text-red-400 font-medium">❌ Email Bounced</p>
+                      <p className="text-red-300 text-xs mt-1">{selectedLead.bounce_reason || 'Unknown error'}</p>
+                      <p className="text-slate-500 text-xs mt-0.5">Attempts: {selectedLead.bounce_count || 0}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Contacts */}
@@ -465,6 +480,19 @@ export function LeadsPage() {
 
                 <div className="flex gap-2">
                   <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(selectedLead.demo_url || demoLink(selectedLead)); alert('Copied!'); }}>Copy Demo Link</Button>
+                  {selectedLead.bounce_status === 'bounced' && (
+                    <Button variant="outline" className="flex-1 text-orange-400 border-orange-800 hover:bg-orange-900/20" onClick={async () => {
+                      if (!confirm('Reset bounce status and try sending again?')) return;
+                      await fetch(`/api/leads/${selectedLead.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bounce_status: null, bounce_count: 0, bounce_reason: null }),
+                      });
+                      fetchLeads();
+                      setSelectedLead(null);
+                      alert('Bounce status reset!');
+                    }}>Reset Bounce</Button>
+                  )}
                   <Button variant="destructive" onClick={() => handleDelete(selectedLead.id)}>Delete</Button>
                 </div>
               </div>
@@ -539,7 +567,7 @@ export function LeadsPage() {
             <p className="text-sm text-slate-400">
               Calls leads to detect if they have after-hours coverage. Silent detection only - no messages left.
             </p>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-slate-800 rounded-lg p-3 text-center">
@@ -561,8 +589,8 @@ export function LeadsPage() {
             </div>
 
             {/* Test Call */}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full"
               onClick={() => handleAfterHoursCall('+12394109645')}
               disabled={calling}
@@ -571,7 +599,7 @@ export function LeadsPage() {
             </Button>
 
             {/* Run Batch */}
-            <Button 
+            <Button
               onClick={() => handleAfterHoursCall()}
               disabled={calling || uncalledLeads.filter(l => l.phone).length === 0}
               className="w-full h-10"
