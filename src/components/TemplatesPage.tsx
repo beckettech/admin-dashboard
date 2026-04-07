@@ -17,19 +17,19 @@ const NICHES: Record<string, { label: string; industry: string; services: string
   hvac: {
     label: 'HVAC',
     industry: 'HVAC companies',
-    services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for maintenance, filters, etc.'],
+    services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for maintenance, filters, etc.'],
     terminology: { bookAction: 'book jobs', followUpItem: 'maintenance, filters, etc.' },
   },
   plumbing: {
     label: 'Plumbing',
     industry: 'plumbing companies',
-    services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and maintenance'],
+    services: ['answer calls, book jobs, handle after-hours inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and maintenance'],
     terminology: { bookAction: 'book jobs', followUpItem: 'inspections and maintenance' },
   },
   roofing: {
     label: 'Roofing',
     industry: 'roofing companies',
-    services: ['answer calls, book inspections, handle storm season inquiries', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for estimates and annual inspections'],
+    services: ['answer calls, book inspections, handle storm season inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for estimates and annual inspections'],
     terminology: { bookAction: 'book inspections', followUpItem: 'estimates and annual inspections' },
   },
   dental: {
@@ -53,13 +53,13 @@ const NICHES: Record<string, { label: string; industry: string; services: string
   realestate: {
     label: 'Real Estate',
     industry: 'real estate agencies',
-    services: ['answer calls, schedule showings, handle listing inquiries', 'never miss a buyer or seller lead', 'respond to social messages instantly', 'automated follow-ups for open houses and listings'],
+    services: ['answer calls, schedule showings, handle listing inquiries', 'never miss a buyer or seller', 'respond to social messages instantly', 'automated follow-ups for open houses and listings'],
     terminology: { bookAction: 'schedule showings', followUpItem: 'open houses and listings' },
   },
   electrical: {
     label: 'Electrical',
     industry: 'electrical contractors',
-    services: ['answer calls, book jobs, handle after-hours emergencies', 'never lose a lead when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and panel upgrades'],
+    services: ['answer calls, book jobs, handle after-hours emergencies', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and panel upgrades'],
     terminology: { bookAction: 'book jobs', followUpItem: 'inspections and panel upgrades' },
   },
 };
@@ -87,20 +87,20 @@ function buildEmail(p: {
   const niche = NICHES[p.niche] || NICHES.hvac;
   const demoLabel = DEMO_TYPES.find(d => d.value === p.demoType)?.label || 'Demo';
   const localLine = p.isLocal ? ' I\'m a SWFL local (Cape Coral).' : '';
-  const missedCallLine = p.missedCall ? '\n\nSomeone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!' : '';
+  const missedCallLine = p.missedCall ? '\n\nSomeone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a customer again!' : '';
   const introText = p.isLocal
-    ? `My name is Beck.${localLine} My company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`
-    : `My name is Beck and my company FastFlow helps businesses like yours capture more leads and save time with AI-powered automation.`;
+    ? `My name is Beck.${localLine} My company FastFlow helps businesses like yours capture more customers and save time with AI-powered automation.`
+    : `My name is Beck and my company FastFlow helps businesses like yours capture more customers and save time with AI-powered automation.`;
 
   // All possible upsell items — exclude the current demo type
   const ALL_OFFERS: Record<string, { label: string; plain: string; html: string }> = {
     voice: { label: 'AI voice agents', plain: `answer calls, book jobs, handle after-hours inquiries`, html: `answer calls, book jobs, handle after-hours inquiries` },
-    missed: { label: 'Missed call text-back', plain: `never lose a lead when you can't pick up`, html: `never lose a lead when you can't pick up` },
+    missed: { label: 'Missed call text-back', plain: `never lose a customer when you can't pick up`, html: `never lose a customer when you can't pick up` },
     social: { label: 'Facebook & Instagram DM automation', plain: `respond to social messages instantly`, html: `respond to social messages instantly` },
     lead_ads: { label: 'Facebook Lead Ads AI', plain: `instantly text leads who click your ads and book them automatically`, html: `instantly text leads who click your ads and book them automatically` },
     organic: { label: 'Facebook Organic auto-DM', plain: `auto-message everyone who comments on your posts`, html: `auto-message everyone who comments on your posts` },
     reminders: { label: 'Reorder & checkup reminders', plain: `automated follow-ups for maintenance, filters, etc.`, html: `automated follow-ups for maintenance, filters, etc.` },
-    webchat: { label: 'AI webchat', plain: `answer questions and capture leads on your website 24/7`, html: `answer questions and capture leads on your website 24/7` },
+    webchat: { label: 'AI webchat', plain: `answer questions and capture customers on your website 24/7`, html: `answer questions and capture customers on your website 24/7` },
     sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
   };
 
@@ -147,7 +147,7 @@ function buildEmail(p: {
     ? `Play with the demo — it texts back, asks qualifying questions, and tries to book an appointment. This is exactly what would happen with your real Facebook leads.`
     : p.demoType === 'organic'
     ? `Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.`
-    : `It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.`;
+    : `It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture customers 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.`;
 
   const bodyText = `Hi ${p.firstName},
 
@@ -166,10 +166,10 @@ Would love to get your thoughts on the demo.
 Best,
 Beck Hoefling`;
 
-  const missedCallHtml = p.missedCall ? '<p>Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a lead again!</p>' : '';
+  const missedCallHtml = p.missedCall ? '<p>Someone mentioned that your business doesn\'t always answer calls after hours — this is exactly what we solve with after hours answering. Never lose a customer again!</p>' : '';
   const introHtml = p.isLocal
-    ? `My name is Beck. I'm a SWFL local (Cape Coral). My company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`
-    : `My name is Beck and my company <strong>FastFlow</strong> helps businesses like yours capture more leads and save time with AI-powered automation.`;
+    ? `My name is Beck. I'm a SWFL local (Cape Coral). My company <strong>FastFlow</strong> helps businesses like yours capture more customers and save time with AI-powered automation.`
+    : `My name is Beck and my company <strong>FastFlow</strong> helps businesses like yours capture more customers and save time with AI-powered automation.`;
 
   const demoBodyHtml = p.demoType === 'lead_ads'
     ? `<p>When someone clicks your Facebook ad and fills out a lead form, the worst thing that can happen is silence. Most businesses take hours — or days — to follow up, and by then the lead is gone.</p>
@@ -183,7 +183,7 @@ Beck Hoefling`;
     ? `<p>Play with the demo — it texts back, asks qualifying questions, and tries to book an appointment. This is exactly what would happen with your real Facebook leads.</p>`
     : p.demoType === 'organic'
     ? `<p>Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.</p>`
-    : `<p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture leads 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.</p>`;
+    : `<p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture customers 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.</p>`;
 
   const bodyHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
   <p>Hi ${p.firstName},</p>
@@ -221,7 +221,7 @@ function buildDM(p: {
   const lines = [
     `Hey there! ${localIntro}Beck from FastFlow.`,
     ``,
-    `I built an ${demoLabel.toLowerCase()} for ${p.business} showing how AI could ${niche.terminology.bookAction} and capture leads 24/7:`,
+    `I built an ${demoLabel.toLowerCase()} for ${p.business} showing how AI could ${niche.terminology.bookAction} and capture customers 24/7:`,
     p.demoLink,
     ``,
     `Would love to get your thoughts on the demo.`,
