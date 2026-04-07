@@ -364,14 +364,15 @@ export function TemplatesPage() {
   };
 
   // Exclude leads that are already processed (sent, opened, used, not interested, sold, followed up)
-  const excludedStatuses = ['sent', 'opened', 'used', 'not_interested', 'sold', 'followed_up', 'pitched', 'approved', 'responded', 'closed', 'passed', 'archived'];
+  const excludedStatuses = ['sent', 'opened', 'used', 'not_interested', 'sold', 'followed_up', 'pitched', 'approved', 'responded', 'closed', 'passed', 'archived', 'building', 'draft'];
+  const isExcluded = (lead: Lead) => excludedStatuses.includes(lead.status) || excludedStatuses.includes(normalizeStatus(lead.status));
 
   useEffect(() => {
     fetch('/api/leads')
       .then(r => r.json())
       .then(data => {
         const arr: Lead[] = Array.isArray(data) ? data : (data.leads || []);
-        const filtered = arr.filter(l => !excludedStatuses.includes(l.status));
+        const filtered = arr.filter(l => normalizeStatus(l.status) === 'created' && l.bounce_status !== 'bounced');
         setLeads(filtered);
         if (filtered.length > 0) prefillLead(filtered[0], 0);
       })
