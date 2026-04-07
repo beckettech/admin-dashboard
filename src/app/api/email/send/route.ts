@@ -147,7 +147,7 @@ export async function POST(request: Request) {
       });
     } else if (isBounced) {
       // Mark as bounced
-      const bounceReason = parseBounceFromZoho(emailData)?.reason || 'Unknown error';
+      const bounceReason = parseBounceFromZoho(emailData)?.reason || JSON.stringify(emailData);
 
       await sql`
         UPDATE leads
@@ -164,9 +164,10 @@ export async function POST(request: Request) {
         reason: bounceReason,
       });
     } else {
+      console.error('Zoho unexpected response:', JSON.stringify(emailData));
       return NextResponse.json({
         success: false,
-        error: emailData.message || 'Unknown error',
+        error: emailData.message || emailData.data?.errorCode || 'Unknown error',
       });
     }
   } catch (error) {
