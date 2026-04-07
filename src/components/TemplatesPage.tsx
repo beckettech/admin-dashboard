@@ -353,12 +353,16 @@ export function TemplatesPage() {
       'found': 'created',
       'building': 'created',
       'draft': 'created',
+      'new': 'created',
+      'created': 'created',
       'approved': 'sent',
       'pitched': 'opened',
       'responded': 'followed_up',
       'closed': 'sold',
       'passed': 'not_interested',
       'archived': 'not_interested',
+      'opened': 'opened',
+      'sent': 'sent',
     };
     return STATUS_MAP[status] || status;
   };
@@ -388,8 +392,19 @@ export function TemplatesPage() {
     const firstName = nameParts[0] || 'there';
     const detectedType = channelToDemoType(lead.channel);
     setDemoType(detectedType);
-    // Auto-detect niche from lead if set, otherwise use current selection
-    if (lead.niche) setNiche(lead.niche);
+    // Auto-detect niche from lead if set, otherwise guess from business name
+    if (lead.niche) {
+      setNiche(lead.niche);
+    } else {
+      const name = (lead.business_name || '').toLowerCase();
+      const plumbingKw = ['plumb', 'pipe', 'drain', 'sewer', 'water heater', 'septic', 'rooter', 'toilet'];
+      const roofingKw = ['roof', 'shingle', 'gutter'];
+      const electricalKw = ['electric', 'wiring', 'panel'];
+      if (plumbingKw.some(k => name.includes(k))) setNiche('plumbing');
+      else if (roofingKw.some(k => name.includes(k))) setNiche('roofing');
+      else if (electricalKw.some(k => name.includes(k))) setNiche('electrical');
+      // default stays as current selection
+    }
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
     setSelectedContactIdx(contactIdx);
