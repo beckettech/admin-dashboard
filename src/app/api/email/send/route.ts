@@ -125,6 +125,7 @@ export async function POST(request: Request) {
     });
 
     const emailData = await emailResponse.json();
+    console.error('Zoho email response:', emailResponse.status, JSON.stringify(emailData));
 
     if (emailData.status === 'success' || emailData.status === 'queued') {
       // Reset bounce count on successful send
