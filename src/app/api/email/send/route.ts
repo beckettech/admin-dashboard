@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     }
 
     // Send email via Zoho Mail API
-    const emailResponse = await fetch('https://mail.zoho.com/api/accounts/915980827/messages', {
+    const emailResponse = await fetch('https://mail.zoho.com/api/accounts/2823738000000008002/messages', {
       method: 'POST',
       headers: {
         'Authorization': `Zoho-oauthtoken ${accessToken}`,
