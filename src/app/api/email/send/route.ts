@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 
     if (!accessToken) {
       console.error('Zoho token error:', JSON.stringify(tokenData));
-      return NextResponse.json({ error: 'Failed to get Zoho access token', zoho_error: tokenData }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to get Zoho access token' }, { status: 500 });
     }
 
     // Send email via Zoho Mail API
