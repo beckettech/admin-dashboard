@@ -392,19 +392,23 @@ export function TemplatesPage() {
     const firstName = nameParts[0] || 'there';
     const detectedType = channelToDemoType(lead.channel);
     setDemoType(detectedType);
-    // Auto-detect niche from lead if set, otherwise guess from business name
-    if (lead.niche) {
-      setNiche(lead.niche);
-    } else {
-      const name = (lead.business_name || '').toLowerCase();
-      const plumbingKw = ['plumb', 'pipe', 'drain', 'sewer', 'water heater', 'septic', 'rooter', 'toilet'];
-      const roofingKw = ['roof', 'shingle', 'gutter'];
-      const electricalKw = ['electric', 'wiring', 'panel'];
-      if (plumbingKw.some(k => name.includes(k))) setNiche('plumbing');
-      else if (roofingKw.some(k => name.includes(k))) setNiche('roofing');
-      else if (electricalKw.some(k => name.includes(k))) setNiche('electrical');
-      // default stays as current selection
-    }
+    // Auto-detect niche from business name (always, even if DB has wrong value)
+    const name = (lead.business_name || '').toLowerCase();
+    const plumbingKw = ['plumb', 'pipe', 'drain', 'sewer', 'water heater', 'septic', 'rooter', 'toilet'];
+    const roofingKw = ['roof', 'shingle', 'gutter'];
+    const electricalKw = ['electric', 'wiring', 'panel'];
+    const dentalKw = ['dental', 'dentist', 'ortho'];
+    const restaurantKw = ['restaurant', 'cafe', 'catering', 'diner', 'food', 'grill'];
+    const salonKw = ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty'];
+    const realestateKw = ['real estate', 'realtor', 'property'];
+    if (plumbingKw.some(k => name.includes(k))) setNiche('plumbing');
+    else if (roofingKw.some(k => name.includes(k))) setNiche('roofing');
+    else if (electricalKw.some(k => name.includes(k))) setNiche('electrical');
+    else if (dentalKw.some(k => name.includes(k))) setNiche('dental');
+    else if (restaurantKw.some(k => name.includes(k))) setNiche('restaurant');
+    else if (salonKw.some(k => name.includes(k))) setNiche('salon');
+    else if (realestateKw.some(k => name.includes(k))) setNiche('realestate');
+    else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
     setSelectedContactIdx(contactIdx);

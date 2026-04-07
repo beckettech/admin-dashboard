@@ -5,8 +5,8 @@ import { sql } from '@vercel/postgres';
 export async function POST() {
   try {
     const niches: Record<string, string[]> = {
-      hvac: ['hvac', 'air conditioning', 'heating', 'cooling', 'ac', 'ventilation', 'air duct', 'climate control', 'conditioning', 'air conditioner', 'furnace', 'heat pump'],
-      plumbing: ['plumbing', 'plumber', 'plumbers', 'pipe', 'drain', 'sewer', 'water heater', 'bathroom', 'toilet', 'leak', 'drainage', 'septic', 'water'],
+      plumbing: ['plumbing', 'plumber', 'plumbers', 'pipe', 'drain', 'sewer', 'water heater', 'bathroom', 'toilet', 'leak', 'drainage', 'septic', 'rooter'],
+      hvac: ['hvac', 'air conditioning', 'heating', 'cooling', 'ac repair', 'ac service', 'ventilation', 'air duct', 'climate control', 'air conditioner', 'furnace', 'heat pump', ' ac '],
       electrical: ['electrical', 'electrician', 'electric', 'wire', 'circuit', 'panel', 'lighting', 'electricity'],
       roofing: ['roofing', 'roof', 'shingle', 'gutter', 'siding', 'roofer'],
       dental: ['dental', 'dentist', 'orthodontist', 'teeth'],
