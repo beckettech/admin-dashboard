@@ -371,8 +371,9 @@ export function TemplatesPage() {
       .then(r => r.json())
       .then(data => {
         const arr: Lead[] = Array.isArray(data) ? data : (data.leads || []);
-        setLeads(arr);
-        if (arr.length > 0) prefillLead(arr[0], 0);
+        const filtered = arr.filter(l => !excludedStatuses.includes(l.status));
+        setLeads(filtered);
+        if (filtered.length > 0) prefillLead(filtered[0], 0);
       })
       .catch(() => {});
   }, []);
