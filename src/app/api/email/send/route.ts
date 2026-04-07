@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 
     if (!accessToken) {
       console.error('Zoho token error:', JSON.stringify(tokenData));
-      return NextResponse.json({ error: 'Failed to get Zoho access token', details: tokenData }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to get Zoho access token' }, { status: 500 });
     }
 
     // Send email via Zoho Mail API
@@ -123,7 +123,6 @@ export async function POST(request: Request) {
     });
 
     const emailData = await emailResponse.json();
-    console.error('Zoho email response:', emailResponse.status, JSON.stringify(emailData));
 
     const isSuccess = emailData.status === 'success' || emailData.status === 'queued' 
       || (emailData.status && typeof emailData.status === 'object' && emailData.status.code === 200);
@@ -147,7 +146,7 @@ export async function POST(request: Request) {
       });
     } else if (isBounced) {
       // Mark as bounced
-      const bounceReason = parseBounceFromZoho(emailData)?.reason || JSON.stringify(emailData);
+      const bounceReason = parseBounceFromZoho(emailData)?.reason || 'Unknown error';
 
       await sql`
         UPDATE leads
