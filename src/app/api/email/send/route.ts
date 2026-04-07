@@ -125,7 +125,12 @@ export async function POST(request: Request) {
     const emailData = await emailResponse.json();
     console.error('Zoho email response:', emailResponse.status, JSON.stringify(emailData));
 
-    if (emailData.status === 'success' || emailData.status === 'queued') {
+    const isSuccess = emailData.status === 'success' || emailData.status === 'queued' 
+      || (emailData.status && typeof emailData.status === 'object' && emailData.status.code === 200);
+    const isBounced = emailData.status === 'bounced' || emailData.status === 'error'
+      || (emailData.status && typeof emailData.status === 'object' && (emailData.status.code === 551 || emailData.status.code === 500));
+
+    if (isSuccess) {
       // Reset bounce count on successful send
       if (leadBounceStatus && leadBounceStatus.bounce_count > 0) {
         await sql`
@@ -140,7 +145,7 @@ export async function POST(request: Request) {
         success: true,
         messageId: emailData.data?.messageId,
       });
-    } else if (emailData.status === 'bounced' || emailData.status === 'error') {
+    } else if (isBounced) {
       // Mark as bounced
       const bounceReason = parseBounceFromZoho(emailData)?.reason || 'Unknown error';
 
