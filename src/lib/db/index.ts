@@ -38,7 +38,7 @@ export async function matchAndConsumeProspect(businessName: string): Promise<{
     const prospects = result.rows;
     if (!prospects.length) return { matched: false };
 
-    let bestMatch = null;
+    let bestMatch: any = null;
     let bestScore = 0;
     for (const p of prospects) {
       const score = stringSimilarity(businessName, p.company_name);
