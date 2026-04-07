@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     }
 
     // Send email via Zoho Mail API
-    const emailResponse = await fetch('https://mail.zoho.com/api/accounts/123456789/messages', {
+    const emailResponse = await fetch('https://mail.zoho.com/api/accounts/915980827/messages', {
       method: 'POST',
       headers: {
         'Authorization': `Zoho-oauthtoken ${accessToken}`,
@@ -117,10 +117,8 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         fromAddress: process.env.ZOHO_FROM_EMAIL || 'fastflow@bek-tech.com',
         toAddress: to,
-        toName: toName || '',
         subject,
-        htmlBody: html,
-        textBody: text,
+        content: html,
       }),
     });
 
