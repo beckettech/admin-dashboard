@@ -15,6 +15,7 @@ export async function POST() {
       'realestate': ['real estate', 'realtor', 'property', 'realty', 'properties'],
       lawncare: ['lawn care', 'lawn', 'landscaping', 'landscape', 'yard', 'mowing', 'turf', 'grounds maintenance', 'garden'],
       contractor: ['contractor', 'contractors', 'construction', 'builder', 'remodel', 'renovation', 'general contractor'],
+      cardetail: ['detailing', 'detail', 'auto spa', 'car wash', 'ceramic coating', 'window tint', 'paint correction', 'car care', 'mobile detail'],
     };
 
     const leads = await sql`SELECT id, business_name, niche FROM leads`;

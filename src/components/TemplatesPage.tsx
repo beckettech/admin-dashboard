@@ -74,6 +74,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book estimates, handle project inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for project quotes and scheduling'],
     terminology: { bookAction: 'book estimates', followUpItem: 'project quotes and scheduling' },
   },
+  cardetail: {
+    label: 'Car Detailing',
+    industry: 'car detailing and auto appearance companies',
+    services: ['answer calls, book appointments, handle service inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for recurring detailing and ceramic coatings'],
+    terminology: { bookAction: 'book appointments', followUpItem: 'recurring detailing and ceramic coatings' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
@@ -423,6 +429,7 @@ export function TemplatesPage() {
     else if (realestateKw.some(k => name.includes(k))) setNiche('realestate');
     else if (lawncareKw.some(k => name.includes(k))) setNiche('lawncare');
     else if (['contractor', 'construct', 'builder', 'remodel', 'renovation'].some(k => name.includes(k))) setNiche('contractor');
+    else if (['detail', 'auto spa', 'car wash', 'ceramic', 'window tint', 'paint correction'].some(k => name.includes(k))) setNiche('cardetail');
     else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
