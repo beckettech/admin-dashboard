@@ -12,7 +12,8 @@ export async function POST() {
       dental: ['dental', 'dentist', 'orthodontist', 'teeth'],
       restaurant: ['restaurant', 'catering', 'food', 'cafe', 'diner', 'grill'],
       salon: ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty', 'hair salon'],
-      'realestate': ['real estate', 'realtor', 'property', 'apartment', 'condo'],
+      'realestate': ['real estate', 'realtor', 'property', 'realty', 'properties'],
+      lawncare: ['lawn care', 'lawn', 'landscaping', 'landscape', 'yard', 'mowing', 'turf', 'grounds maintenance', 'garden'],
     };
 
     const leads = await sql`SELECT id, business_name, niche FROM leads`;

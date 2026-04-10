@@ -62,6 +62,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book jobs, handle after-hours emergencies', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for inspections and panel upgrades'],
     terminology: { bookAction: 'book jobs', followUpItem: 'inspections and panel upgrades' },
   },
+  lawncare: {
+    label: 'Lawn Care',
+    industry: 'lawn care and landscaping companies',
+    services: ['answer calls, book estimates, handle seasonal inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for seasonal services and recurring mowing'],
+    terminology: { bookAction: 'book estimates', followUpItem: 'seasonal services and recurring mowing' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
@@ -400,7 +406,8 @@ export function TemplatesPage() {
     const dentalKw = ['dental', 'dentist', 'ortho'];
     const restaurantKw = ['restaurant', 'cafe', 'catering', 'diner', 'food', 'grill'];
     const salonKw = ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty'];
-    const realestateKw = ['real estate', 'realtor', 'property'];
+    const realestateKw = ['real estate', 'realtor', 'property', 'realty', 'realty group', 'properties'];
+    const lawncareKw = ['lawn', 'landscape', 'landscaping', 'yard', 'mowing', 'turf', 'grounds', 'garden'];
     if (plumbingKw.some(k => name.includes(k))) setNiche('plumbing');
     else if (roofingKw.some(k => name.includes(k))) setNiche('roofing');
     else if (electricalKw.some(k => name.includes(k))) setNiche('electrical');
@@ -408,6 +415,7 @@ export function TemplatesPage() {
     else if (restaurantKw.some(k => name.includes(k))) setNiche('restaurant');
     else if (salonKw.some(k => name.includes(k))) setNiche('salon');
     else if (realestateKw.some(k => name.includes(k))) setNiche('realestate');
+    else if (lawncareKw.some(k => name.includes(k))) setNiche('lawncare');
     else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
