@@ -68,6 +68,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book estimates, handle seasonal inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for seasonal services and recurring mowing'],
     terminology: { bookAction: 'book estimates', followUpItem: 'seasonal services and recurring mowing' },
   },
+  contractor: {
+    label: 'Contractor',
+    industry: 'general contractors and construction companies',
+    services: ['answer calls, book estimates, handle project inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for project quotes and scheduling'],
+    terminology: { bookAction: 'book estimates', followUpItem: 'project quotes and scheduling' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
@@ -416,6 +422,7 @@ export function TemplatesPage() {
     else if (salonKw.some(k => name.includes(k))) setNiche('salon');
     else if (realestateKw.some(k => name.includes(k))) setNiche('realestate');
     else if (lawncareKw.some(k => name.includes(k))) setNiche('lawncare');
+    else if (['contractor', 'construct', 'builder', 'remodel', 'renovation'].some(k => name.includes(k))) setNiche('contractor');
     else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
