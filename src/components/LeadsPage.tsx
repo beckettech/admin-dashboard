@@ -37,6 +37,7 @@ interface Lead {
   demo_viewed_at?: string | null;
   niche?: string | null;
   bounce_status?: string | null;
+  facebook?: string | null;
   bounce_reason?: string | null;
   bounce_count?: number | null;
 }
@@ -425,6 +426,7 @@ export function LeadsPage() {
                   {selectedLead.niche && <p><span className="text-slate-400">Niche:</span> <span className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs capitalize">{selectedLead.niche}</span></p>}
                   {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}
                   {selectedLead.website && <p><span className="text-slate-400">Website:</span> <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.website}</a></p>}
+                  {selectedLead.facebook && <p><span className="text-slate-400">Facebook:</span> <a href={selectedLead.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.facebook}</a></p>}
                   {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
                   {selectedLead.channel && <p><span className="text-slate-400">Channel:</span> {selectedLead.channel}</p>}
                   {selectedLead.demo_url && <p><span className="text-slate-400">Demo:</span> <a href={selectedLead.demo_url} target="_blank" rel="noopener noreferrer" className="text-blue-400">View Demo →</a></p>}

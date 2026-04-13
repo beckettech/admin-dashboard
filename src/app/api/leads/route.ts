@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getAuthStatus } from '@/lib/auth';
 import { getLeads, createLead, getLeadStats } from '@/lib/db';
+import { sql } from '@vercel/postgres';
 
 export async function GET(request: Request) {
+  // Ensure facebook column exists
+  try { await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS facebook TEXT`; } catch {}
+  
   const authenticated = await getAuthStatus();
   if (!authenticated) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
