@@ -427,6 +427,23 @@ export function LeadsPage() {
                   {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}
                   {selectedLead.website && <p><span className="text-slate-400">Website:</span> <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.website}</a></p>}
                   {selectedLead.facebook && <p><span className="text-slate-400">Facebook:</span> <a href={selectedLead.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.facebook}</a></p>}
+                  {!selectedLead.facebook && (
+                    <div className="flex gap-2 items-center">
+                      <span className="text-slate-400 text-sm shrink-0">Facebook:</span>
+                      <input type="text" placeholder="https://facebook.com/..." className="bg-slate-700 text-sm rounded px-2 py-1 flex-1 min-w-0"
+                        onBlur={async (e) => {
+                          const val = e.target.value.trim();
+                          if (val && val.startsWith('http')) {
+                            await fetch(`/api/leads/${selectedLead.id}`, {
+                              method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                              body: JSON.stringify({ facebook: val })
+                            });
+                            selectedLead.facebook = val;
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                   {selectedLead.city && <p><span className="text-slate-400">City:</span> {selectedLead.city}</p>}
                   {selectedLead.channel && <p><span className="text-slate-400">Channel:</span> {selectedLead.channel}</p>}
                   {selectedLead.demo_url && <p><span className="text-slate-400">Demo:</span> <a href={selectedLead.demo_url} target="_blank" rel="noopener noreferrer" className="text-blue-400">View Demo →</a></p>}

@@ -130,8 +130,10 @@ export async function logDemoView(data: {
 
 export async function getDemoViews(limit = 100, offset = 0) {
   const result = await sql`
-    SELECT * FROM demo_views
-    ORDER BY viewed_at DESC
+    SELECT d.*, l.facebook
+    FROM demo_views d
+    LEFT JOIN leads l ON d.lead_id = l.id
+    ORDER BY d.viewed_at DESC
     LIMIT ${limit} OFFSET ${offset}
   `;
   return result.rows;

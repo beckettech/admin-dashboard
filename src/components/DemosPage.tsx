@@ -16,6 +16,7 @@ interface DemoView {
   prospect_contact?: string;
   prospect_location?: string;
   prospect_niche?: string;
+  facebook?: string;
 }
 
 interface MergedDemo {
@@ -32,9 +33,8 @@ interface MergedDemo {
   prospect_contact?: string;
   prospect_location?: string;
   prospect_niche?: string;
-}
-
-export function DemosPage() {
+  facebook?: string;
+}export function DemosPage() {
   const [views, setViews] = useState<DemoView[]>([]);
   const [merged, setMerged] = useState<MergedDemo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +66,7 @@ export function DemosPage() {
               prospect_contact: v.prospect_contact,
               prospect_location: v.prospect_location,
               prospect_niche: v.prospect_niche,
+              facebook: v.facebook,
             });
           } else {
             const existing = grouped.get(key)!;
@@ -247,6 +248,12 @@ export function DemosPage() {
                     className="flex items-center justify-center gap-1 h-11 bg-green-900/40 rounded-xl text-green-400 text-sm active:bg-green-900/60"
                   >
                     📞 Call
+                  </a>
+                )}
+                {demo.facebook && (
+                  <a href={demo.facebook} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1 h-11 bg-[#1877F2]/20 rounded-xl text-blue-400 text-sm active:bg-[#1877F2]/30">
+                    💬 Facebook
                   </a>
                 )}
                 <button
