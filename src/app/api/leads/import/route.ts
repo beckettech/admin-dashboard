@@ -3,6 +3,12 @@ import { getAuthStatus } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 
 export async function POST(request: Request) {
+  // Ensure facebook and niche columns exist
+  try {
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS facebook TEXT`;
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS niche TEXT`;
+  } catch {}
+
   const authenticated = await getAuthStatus();
   if (!authenticated) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
