@@ -418,7 +418,7 @@ export function TemplatesPage() {
     const roofingKw = ['roof', 'shingle', 'gutter'];
     const electricalKw = ['electric', 'wiring', 'panel'];
     const dentalKw = ['dental', 'dentist', 'ortho'];
-    const restaurantKw = ['restaurant', 'cafe', 'catering', 'diner', 'food', 'grill'];
+    const restaurantKw = ['restaurant', 'restaur', 'cafe', 'catering', 'diner', 'food', 'grill', 'pizza', 'burger', 'taco', 'sushi', 'bakery', 'bistro', 'kitchen', 'bbq', 'wing'];
     const salonKw = ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty'];
     const realestateKw = ['real estate', 'realtor', 'property', 'realty', 'realty group', 'properties'];
     const lawncareKw = ['lawn', 'landscape', 'landscaping', 'yard', 'mowing', 'turf', 'grounds', 'garden'];

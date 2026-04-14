@@ -10,7 +10,7 @@ export async function POST() {
       electrical: ['electrical', 'electrician', 'electric', 'wire', 'circuit', 'panel', 'lighting', 'electricity'],
       roofing: ['roofing', 'roof', 'shingle', 'gutter', 'siding', 'roofer'],
       dental: ['dental', 'dentist', 'orthodontist', 'teeth'],
-      restaurant: ['restaurant', 'catering', 'food', 'cafe', 'diner', 'grill'],
+      restaurant: ['restaurant', 'restaur', 'catering', 'food', 'cafe', 'diner', 'grill', 'pizza', 'burger', 'taco', 'sushi', 'bakery', 'bistro', 'kitchen', 'bbq', 'wing'],
       salon: ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty', 'hair salon'],
       'realestate': ['real estate', 'realtor', 'property', 'realty', 'properties'],
       lawncare: ['lawn care', 'lawn', 'landscaping', 'landscape', 'yard', 'mowing', 'turf', 'grounds maintenance', 'garden'],
