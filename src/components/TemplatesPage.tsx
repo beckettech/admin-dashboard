@@ -86,6 +86,18 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book inspections, handle emergency pest inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for quarterly treatments and renewals'],
     terminology: { bookAction: 'book inspections', followUpItem: 'quarterly treatments and renewals' },
   },
+  poolservice: {
+    label: 'Pool Service',
+    industry: 'pool cleaning and maintenance companies',
+    services: ['answer calls, schedule cleanings, handle maintenance inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for seasonal openings, closings, and filter changes'],
+    terminology: { bookAction: 'schedule cleanings', followUpItem: 'seasonal openings and filter changes' },
+  },
+  poolbuilder: {
+    label: 'Pool Builder',
+    industry: 'pool construction and installation companies',
+    services: ['answer calls, book estimates, handle design inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for project quotes and construction milestones'],
+    terminology: { bookAction: 'book estimates', followUpItem: 'project quotes and construction milestones' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
@@ -439,6 +451,9 @@ export function TemplatesPage() {
     else if (['contractor', 'construct', 'builder', 'remodel', 'renovation'].some(k => name.includes(k))) setNiche('contractor');
     else if (['detail', 'auto spa', 'car wash', 'ceramic', 'window tint', 'paint correction'].some(k => name.includes(k))) setNiche('cardetail');
     else if (['pest', 'extermin', 'termite', 'rodent', 'bug', 'insect', 'mosquito', 'wildlife removal'].some(k => name.includes(k))) setNiche('pestcontrol');
+    else if (['pool clean', 'pool service', 'pool maint', 'pool repair', 'pool chem'].some(k => name.includes(k))) setNiche('poolservice');
+    else if (['pool build', 'pool construct', 'pool install', 'pool design', 'custom pool', 'pool contractor'].some(k => name.includes(k))) setNiche('poolbuilder');
+    else if (['pool'].some(k => name.includes(k))) setNiche('poolservice');
     else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');

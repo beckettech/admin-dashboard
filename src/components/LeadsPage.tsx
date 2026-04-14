@@ -443,6 +443,8 @@ export function LeadsPage() {
                       <option value="contractor">Contractor</option>
                       <option value="cardetail">Car Detailing</option>
                       <option value="pestcontrol">Pest Control</option>
+                      <option value="poolservice">Pool Service</option>
+                      <option value="poolbuilder">Pool Builder</option>
                     </select>
                   </div>
                   {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}

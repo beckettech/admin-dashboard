@@ -17,6 +17,8 @@ export async function POST() {
       contractor: ['contractor', 'contractors', 'construction', 'builder', 'remodel', 'renovation', 'general contractor'],
       cardetail: ['detailing', 'detail', 'auto spa', 'car wash', 'ceramic coating', 'window tint', 'paint correction', 'car care', 'mobile detail'],
       pestcontrol: ['pest control', 'pest', 'exterminator', 'exterminating', 'termite', 'rodent', 'bug', 'insect', 'mosquito control', 'wildlife removal'],
+      poolservice: ['pool cleaning', 'pool service', 'pool maintenance', 'pool repair', 'pool chemical', 'pool care'],
+      poolbuilder: ['pool builder', 'pool building', 'pool construction', 'pool installation', 'pool design', 'custom pool', 'pool contractor'],
     };
 
     const leads = await sql`SELECT id, business_name, niche FROM leads`;
