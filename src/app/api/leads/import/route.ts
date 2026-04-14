@@ -35,6 +35,8 @@ export async function POST(request: Request) {
         const newContact = (ownerName || email)
           ? { name: ownerName, email, phone, primary: true }
           : null;
+        const facebook = lead.facebook || null;
+        const niche = lead.niche || null;
 
         // Check existing lead (by id OR business name OR phone)
         const existing = await sql`
@@ -106,7 +108,9 @@ export async function POST(request: Request) {
                 website    = COALESCE(${updateData.website ?? null}, website),
                 city       = COALESCE(${updateData.city ?? null}, city),
                 call_status = COALESCE(${updateData.call_status ?? null}, call_status),
-                called_at  = COALESCE(${updateData.called_at ?? null}, called_at)
+                called_at  = COALESCE(${updateData.called_at ?? null}, called_at),
+                facebook   = COALESCE(${facebook}, facebook),
+                niche      = COALESCE(${niche}, niche)
               WHERE id = ${existingLead.id}
             `;
           } catch (e) {
@@ -175,7 +179,7 @@ export async function POST(request: Request) {
 
         // Insert using only columns that actually exist in the schema
         await sql`
-          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel, call_status, called_at)
+          INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel, call_status, called_at, facebook, niche)
           VALUES (
             ${id}, ${businessName},
             ${insertOwner},
@@ -188,7 +192,9 @@ export async function POST(request: Request) {
             ${demoUrl},
             ${channel},
             ${insertCallStatus},
-            ${insertCalledAt}
+            ${insertCalledAt},
+            ${facebook},
+            ${niche}
           )
           ON CONFLICT (id) DO UPDATE SET
             demo_url   = COALESCE(EXCLUDED.demo_url, leads.demo_url),
@@ -197,6 +203,8 @@ export async function POST(request: Request) {
             owner_name = COALESCE(EXCLUDED.owner_name, leads.owner_name),
             call_status = COALESCE(EXCLUDED.call_status, leads.call_status),
             called_at  = COALESCE(EXCLUDED.called_at, leads.called_at),
+            facebook   = COALESCE(EXCLUDED.facebook, leads.facebook),
+            niche      = COALESCE(EXCLUDED.niche, leads.niche),
             updated_at = NOW()
         `;
         // Try contacts separately
