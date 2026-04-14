@@ -41,7 +41,7 @@ const NICHES: Record<string, { label: string; industry: string; services: string
   restaurant: {
     label: 'Restaurant',
     industry: 'restaurants',
-    services: ['answer calls, take reservations, handle menu questions', 'never miss a reservation or catering inquiry', 'respond to social messages instantly', 'automated review requests and loyalty follow-ups'],
+    services: ['answer every call so customers never hear voicemail', 'take reservations and catering orders 24/7 — even during rush', 'never miss a catering inquiry or large party booking again', 'automated review requests and loyalty follow-ups'],
     terminology: { bookAction: 'take reservations', followUpItem: 'review requests and loyalty follow-ups' },
   },
   salon: {
