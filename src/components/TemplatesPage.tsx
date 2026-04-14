@@ -657,16 +657,16 @@ export function TemplatesPage() {
                 <Label>Demo Link</Label>
                 <Input value={fields.demoLink} onChange={e => setFields({ ...fields, demoLink: e.target.value })} />
               </div>
-              {selectedFacebook && (
               <div className="space-y-2">
                 <Label>Facebook Page</Label>
                 <div className="flex gap-2">
-                  <Input value={selectedFacebook} onChange={e => setSelectedFacebook(e.target.value)} className="flex-1" />
+                  <Input value={selectedFacebook || ''} onChange={e => setSelectedFacebook(e.target.value || null)} placeholder="https://facebook.com/..." className="flex-1" />
+                  {selectedFacebook && (
                   <a href={selectedFacebook} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center px-3 rounded-md bg-[#1877F2] text-white text-sm hover:bg-[#166fe5]">💬</a>
+                  )}
                 </div>
               </div>
-              )}
               <div className="space-y-2">
                 {fields.demoLink && (
                   <div className="flex gap-2 items-center">
@@ -697,7 +697,7 @@ export function TemplatesPage() {
               {sending ? '📤 Sending...' : sent ? '✅ Sent!' : `📧 Send to ${fields.toEmail || '...'}`}
             </Button>
             {selectedFacebook && (
-              <a href={selectedFacebook} target="_blank" rel="noopener noreferrer"
+              <a href={selectedFacebook.startsWith('http') ? selectedFacebook : `https://${selectedFacebook}`} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full h-10 gap-2 rounded-md bg-[#1877F2] hover:bg-[#166fe5] text-white font-medium text-sm transition-colors">
                 💬 Open Facebook Page
               </a>
