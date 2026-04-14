@@ -423,7 +423,28 @@ export function LeadsPage() {
               <div className="space-y-4">
                 {/* Business info */}
                 <div className="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
-                  {selectedLead.niche && <p><span className="text-slate-400">Niche:</span> <span className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs capitalize">{selectedLead.niche}</span></p>}
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 shrink-0">Niche:</span>
+                    <select value={selectedLead.niche || ''} onChange={async (e) => {
+                      const val = e.target.value || null;
+                      await fetch(`/api/leads/${selectedLead.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ niche: val }) });
+                      selectedLead.niche = val;
+                    }} className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white flex-1 min-w-0">
+                      <option value="">-- none --</option>
+                      <option value="hvac">HVAC</option>
+                      <option value="plumbing">Plumbing</option>
+                      <option value="roofing">Roofing</option>
+                      <option value="electrical">Electrical</option>
+                      <option value="dental">Dental</option>
+                      <option value="restaurant">Restaurant</option>
+                      <option value="salon">Salon / Spa</option>
+                      <option value="realestate">Real Estate</option>
+                      <option value="lawncare">Lawn Care</option>
+                      <option value="contractor">Contractor</option>
+                      <option value="cardetail">Car Detailing</option>
+                      <option value="pestcontrol">Pest Control</option>
+                    </select>
+                  </div>
                   {selectedLead.phone && <p><span className="text-slate-400">Phone:</span> <a href={`tel:${selectedLead.phone}`} className="text-blue-400">{selectedLead.phone}</a></p>}
                   {selectedLead.website && <p><span className="text-slate-400">Website:</span> <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.website}</a></p>}
                   {selectedLead.facebook && <p><span className="text-slate-400">Facebook:</span> <a href={selectedLead.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-400 truncate">{selectedLead.facebook}</a></p>}

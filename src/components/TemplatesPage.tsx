@@ -80,6 +80,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book appointments, handle service inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for recurring detailing and ceramic coatings'],
     terminology: { bookAction: 'book appointments', followUpItem: 'recurring detailing and ceramic coatings' },
   },
+  pestcontrol: {
+    label: 'Pest Control',
+    industry: 'pest control companies',
+    services: ['answer calls, book inspections, handle emergency pest inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for quarterly treatments and renewals'],
+    terminology: { bookAction: 'book inspections', followUpItem: 'quarterly treatments and renewals' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
@@ -432,6 +438,7 @@ export function TemplatesPage() {
     else if (lawncareKw.some(k => name.includes(k))) setNiche('lawncare');
     else if (['contractor', 'construct', 'builder', 'remodel', 'renovation'].some(k => name.includes(k))) setNiche('contractor');
     else if (['detail', 'auto spa', 'car wash', 'ceramic', 'window tint', 'paint correction'].some(k => name.includes(k))) setNiche('cardetail');
+    else if (['pest', 'extermin', 'termite', 'rodent', 'bug', 'insect', 'mosquito', 'wildlife removal'].some(k => name.includes(k))) setNiche('pestcontrol');
     else if (lead.niche) setNiche(lead.niche);
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
