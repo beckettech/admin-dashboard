@@ -8,7 +8,7 @@ const navItems = [
   { href: '/prospects', label: 'Prospects', icon: '📞' },
   { href: '/leads', label: 'Demos', icon: '🎯' },
   { href: '/templates', label: 'Email', icon: '📧' },
-
+  { href: '/followup', label: 'Follow Up', icon: '🔄' },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {

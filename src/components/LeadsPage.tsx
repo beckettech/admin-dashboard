@@ -95,7 +95,6 @@ export function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showNoAnswerOnly, setShowNoAnswerOnly] = useState(false);
   const [activeTab, setActiveTab] = useState<'pipeline' | 'calls'>('pipeline');
-  const [followUpLead, setFollowUpLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -118,7 +117,6 @@ export function LeadsPage() {
   const calledLeads = leads.filter(l => l.call_status && l.call_status !== 'uncalled');
   const uncalledLeads = leads.filter(l => !l.call_status || l.call_status === 'uncalled');
   const noAnswerCount = leads.filter(l => l.call_status === 'no_answer').length;
-  const followUpLeads = leads.filter(l => l.status === 'opened' || l.status === 'used');
 
   const handleCreate = async (formData: FormData) => {
     await fetch('/api/leads', {
@@ -225,60 +223,6 @@ export function LeadsPage() {
       setCallResults({ error: String(error) });
     } finally {
       setCalling(false);
-    }
-  };
-
-  const sendFollowUp = async (lead: Lead) => {
-    const firstName = (lead.owner_name?.split(' ')[0] || 'there');
-    const isSWFL = lead.city?.toLowerCase().includes('cape') || 
-                    lead.city?.toLowerCase().includes('fort myers') || 
-                    lead.city?.toLowerCase().includes('naples') || 
-                    lead.city?.toLowerCase().includes('bonita') ||
-                    lead.city?.toLowerCase().includes('estero') ||
-                    lead.city?.toLowerCase().includes('lehigh');
-    
-    const promoLine = isSWFL ? '\n\n🎁 SWFL Local Special: Use code SWFL50 for 50% off every month!' : '';
-    
-    const subject = `Quick follow-up on your ${lead.business_name} demo`;
-    const html = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
-      <p>Hi ${firstName},</p>
-      <p>Just wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!</p>
-      <p>Any questions or want to see how this would work for your specific setup? Just reply and let me know.${promoLine ? '</p><div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>' : ''}</p>
-      <p>Best,<br><strong>Beck Hoefling</strong></p>
-    </div>
-    <div style="margin-top:16px;"><a href="https://fastflow.bek-tech.com"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | <a href="https://fastflow.bek-tech.com" style="color:#2563eb;text-decoration:none;">fastflow.bek-tech.com</a> | (239) 946-1776</span></b></div>`;
-    
-    const text = `Hi ${firstName},\n\nJust wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!${promoLine}\n\nAny questions or want to see how this would work for your specific setup? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
-    
-    try {
-      const res = await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: lead.email,
-          toName: lead.owner_name,
-          subject,
-          html,
-          text
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`✅ Follow-up sent to ${lead.email}`);
-        // Update status to followed_up
-        await fetch(`/api/leads/${lead.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'followed_up' })
-        });
-        fetchLeads();
-      } else if (data.bounced) {
-        alert(`❌ Email bounced: ${data.reason}`);
-      } else {
-        alert(`❌ Failed: ${data.error}`);
-      }
-    } catch (e) {
-      alert(`❌ Error: ${e}`);
     }
   };
 
@@ -461,45 +405,8 @@ export function LeadsPage() {
             ))}
           </div>
         </div>
-
-        {/* Follow Up Section */}
-        {followUpLeads.length > 0 && (
-          <div className="mt-6 space-y-3">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              Follow Up <span className="bg-purple-500 text-xs px-2 py-0.5 rounded-full text-white">{followUpLeads.length}</span>
-            </h2>
-            <p className="text-sm text-slate-400">Leads that opened or used their demo</p>
-            <div className="space-y-2">
-              {followUpLeads.map((lead) => (
-                <div key={lead.id} className="bg-slate-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{lead.business_name}</div>
-                      <div className="text-xs text-slate-400 mt-1">
-                        {lead.email} {lead.city && `• ${lead.city}`}
-                      </div>
-                      <div className="text-xs text-purple-400 mt-1">
-                        {lead.status === 'opened' ? '👁️ Opened' : '✅ Used'}
-                        {lead.demo_viewed_at && ` • ${new Date(lead.demo_viewed_at).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setFollowUpLead(lead)}
-                      variant="outline"
-                      className="h-9 px-4 text-sm border-purple-500 text-purple-400 hover:bg-purple-500/10"
-                    >
-                      Preview & Send
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         </>
       )}
-
-      {/* Lead Detail Modal */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{selectedLead?.business_name}</DialogTitle></DialogHeader>
@@ -761,43 +668,6 @@ export function LeadsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Follow Up Preview Modal */}
-      <Dialog open={!!followUpLead} onOpenChange={() => setFollowUpLead(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Follow Up: {followUpLead?.business_name}</DialogTitle></DialogHeader>
-          {followUpLead && (() => {
-            const firstName = (followUpLead.owner_name?.split(' ')[0] || 'there');
-            const isSWFL = followUpLead.city?.toLowerCase().includes('cape') || 
-                            followUpLead.city?.toLowerCase().includes('fort myers') || 
-                            followUpLead.city?.toLowerCase().includes('naples') || 
-                            followUpLead.city?.toLowerCase().includes('bonita') ||
-                            followUpLead.city?.toLowerCase().includes('estero') ||
-                            followUpLead.city?.toLowerCase().includes('lehigh');
-            const promoHtml = isSWFL ? `<div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>` : '';
-            const previewHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
-              <p>Hi ${firstName},</p>
-              <p>Just wanted to follow up on the demo I sent over for ${followUpLead.business_name}. Hope you got a chance to take a look!</p>
-              <p>Any questions or want to see how this would work for your specific setup? Just reply and let me know.${promoHtml}</p>
-              <p>Best,<br><strong>Beck Hoefling</strong></p>
-            </div>
-            <div style="margin-top:16px;"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | fastflow.bek-tech.com | (239) 946-1776</span></b></div>`;
-            return (
-              <div className="space-y-4">
-                <div className="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
-                  <div><span className="text-slate-400">To:</span> {followUpLead.email}</div>
-                  <div><span className="text-slate-400">Subject:</span> Quick follow-up on your {followUpLead.business_name} demo</div>
-                  {isSWFL && <div className="text-green-400">🎁 SWFL promo included</div>}
-                </div>
-                <div className="border border-slate-700 rounded-lg p-4 bg-white text-black text-sm" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={() => setFollowUpLead(null)}>Cancel</Button>
-                  <Button onClick={() => { sendFollowUp(followUpLead); setFollowUpLead(null); }}>Send Follow-Up</Button>
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
