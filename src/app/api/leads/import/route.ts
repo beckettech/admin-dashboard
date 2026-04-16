@@ -44,12 +44,13 @@ export async function POST(request: Request) {
         const facebook = lead.facebook || null;
         const niche = lead.niche || null;
 
-        // Check existing lead (by id OR business name OR phone)
+        // Check existing lead (by id OR business name OR phone) — but skip deleted leads
         const existing = await sql`
           SELECT * FROM leads
-          WHERE id = ${id}
+          WHERE (id = ${id}
              OR business_name ILIKE ${businessName}
-             OR (phone IS NOT NULL AND phone = ${phone})
+             OR (phone IS NOT NULL AND phone = ${phone}))
+            AND deleted_at IS NULL
           LIMIT 1
         `;
 
@@ -184,6 +185,13 @@ export async function POST(request: Request) {
         const insertCalledAt = prospectsMerged.called_at;
 
         // Insert using only columns that actually exist in the schema
+        // But skip if this ID was previously deleted
+        const wasDeleted = await sql`SELECT id FROM leads WHERE id = ${id} AND deleted_at IS NOT NULL LIMIT 1`;
+        if (wasDeleted.rows.length > 0) {
+          console.log('Skipping reimport of deleted lead:', id);
+          continue;
+        }
+
         await sql`
           INSERT INTO leads (id, business_name, owner_name, email, phone, website, city, status, notes, demo_url, channel, call_status, called_at, facebook, niche)
           VALUES (

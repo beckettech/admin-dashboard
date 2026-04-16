@@ -164,11 +164,11 @@ export async function getDemoViewStats() {
 
 // Leads
 export async function getLeads(status?: string) {
-  let query = 'SELECT * FROM leads ORDER BY created_at DESC';
+  let query = 'SELECT * FROM leads WHERE deleted_at IS NULL ORDER BY created_at DESC';
   const params: string[] = [];
   
   if (status) {
-    query = 'SELECT * FROM leads WHERE status = $1 ORDER BY created_at DESC';
+    query = 'SELECT * FROM leads WHERE deleted_at IS NULL AND status = $1 ORDER BY created_at DESC';
     params.push(status);
   }
   
@@ -237,7 +237,11 @@ export async function updateLead(id: string, data: Partial<{
 }
 
 export async function deleteLead(id: string) {
-  await sql`DELETE FROM leads WHERE id = ${id}`;
+  // Soft delete — set deleted_at timestamp so it won't be reimported
+  try {
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`;
+  } catch {}
+  await sql`UPDATE leads SET deleted_at = NOW() WHERE id = ${id}`;
 }
 
 export async function getLeadStats() {
