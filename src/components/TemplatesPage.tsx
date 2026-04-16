@@ -185,6 +185,7 @@ function buildEmail(p: {
     ? `Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.`
     : `It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture customers 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.`;
 
+  const swflPromoText = p.isLocal ? `\n\n🎁 **SWFL Local Special**: Use code **SWFL50** for 50% off your first month!` : '';
   const bodyText = `Hi ${p.firstName},
 
 ${introText}${missedCallLine}
@@ -195,7 +196,7 @@ ${demoBodyLine}
 ${demoClosingLine}
 
 Beyond that, FastFlow also offers:
-${upsellItems.map(i => `- ${i.label} — ${i.plain}`).join('\n')}
+${upsellItems.map(i => `- ${i.label} — ${i.plain}`).join('\n')}${swflPromoText}
 
 Would love to get your thoughts on the demo.
 
@@ -221,6 +222,7 @@ Beck Hoefling`;
     ? `<p>Play with the demo — it responds like a real rep, answers questions, and pushes toward a booking. This is what your commenters would experience automatically.</p>`
     : `<p>It's a live prototype — play with it to see how it handles common customer questions. This kind of tool could help you capture customers 24/7, answer FAQs, and ${niche.terminology.bookAction} even when your team's off the clock.</p>`;
 
+  const swflPromoHtml = p.isLocal ? `<div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off your first month!</p></div>` : '';
   const bodyHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
   <p>Hi ${p.firstName},</p>
   <p>${introHtml}</p>
@@ -232,7 +234,7 @@ Beck Hoefling`;
   <ul style="padding-left:20px;margin:8px 0;">
     ${upsellItems.map(i => `<li><strong>${i.label}</strong> — ${i.html}</li>`).join('\n    ')}
   </ul>
-
+  ${swflPromoHtml}
   <p>Would love to get your thoughts on the demo.</p>
   <p>Best,<br><strong>Beck Hoefling</strong></p>
 </div>
@@ -267,6 +269,10 @@ function buildDM(p: {
     `- Facebook & Instagram DM automation`,
     `- ${niche.terminology.followUpItem.charAt(0).toUpperCase() + niche.terminology.followUpItem.slice(1)} reminders`,
   ];
+
+  if (p.isLocal) {
+    lines.push('', '🎁 SWFL Local Special: Use code SWFL50 for 50% off your first month!');
+  }
 
   return lines.join('\n').trim();
 }
