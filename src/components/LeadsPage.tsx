@@ -94,7 +94,8 @@ export function LeadsPage() {
   const [callResults, setCallResults] = useState<any>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showNoAnswerOnly, setShowNoAnswerOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'calls' | 'followup'>('pipeline');
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'calls'>('pipeline');
+  const [followUpLead, setFollowUpLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -241,13 +242,13 @@ export function LeadsPage() {
     const subject = `Quick follow-up on your ${lead.business_name} demo`;
     const html = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
       <p>Hi ${firstName},</p>
-      <p>Saw you checked out the ${lead.business_name} demo — hope it gave you a sense of how AI could help capture more customers!</p>
+      <p>Just wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!</p>
       <p>Any questions or want to see how this would work for your specific setup? Just reply and let me know.${promoLine ? '</p><div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>' : ''}</p>
       <p>Best,<br><strong>Beck Hoefling</strong></p>
     </div>
     <div style="margin-top:16px;"><a href="https://fastflow.bek-tech.com"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | <a href="https://fastflow.bek-tech.com" style="color:#2563eb;text-decoration:none;">fastflow.bek-tech.com</a> | (239) 946-1776</span></b></div>`;
     
-    const text = `Hi ${firstName},\n\nSaw you checked out the ${lead.business_name} demo — hope it gave you a sense of how AI could help capture more customers!${promoLine}\n\nAny questions or want to see how this would work for your specific setup? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
+    const text = `Hi ${firstName},\n\nJust wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!${promoLine}\n\nAny questions or want to see how this would work for your specific setup? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
     
     try {
       const res = await fetch('/api/email/send', {
@@ -327,17 +328,11 @@ export function LeadsPage() {
         >
           Call Log {calledLeads.length > 0 && <span className="bg-blue-500 text-xs px-1.5 rounded">{calledLeads.length}</span>}
         </button>
-        <button
-          onClick={() => setActiveTab('followup')}
-          className={`px-4 py-2 text-sm font-medium rounded-t flex items-center gap-2 ${activeTab === 'followup' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
-        >
-          Follow Up {followUpLeads.length > 0 && <span className="bg-purple-500 text-xs px-1.5 rounded">{followUpLeads.length}</span>}
-        </button>
       </div>
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : activeTab === 'calls' ? 'Call Log' : 'Follow Up'}</h1>
+        <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : 'Call Log'}</h1>
         <div className="flex gap-2 flex-wrap">
           {activeTab === 'pipeline' && noAnswerCount > 0 && (
             <Button
@@ -420,53 +415,9 @@ export function LeadsPage() {
         </div>
       )}
 
-      {/* Follow Up Tab */}
-      {activeTab === 'followup' && (
-        <div className="space-y-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 text-sm text-slate-300">
-            <p>These leads opened or used their demo. Send a quick follow-up with the SWFL50 promo code!</p>
-          </div>
-          
-          {followUpLeads.length === 0 ? (
-            <div className="bg-slate-800/50 rounded-lg p-8 text-center text-slate-400">
-              <p>No leads have opened their demo yet.</p>
-              <p className="text-sm mt-2">When leads view or interact with their demo, they'll appear here.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {followUpLeads.map((lead) => (
-                <div key={lead.id} className="bg-slate-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{lead.business_name}</div>
-                      <div className="text-xs text-slate-400 mt-1">
-                        {lead.email} {lead.city && `• ${lead.city}`}
-                      </div>
-                      <div className="text-xs text-purple-400 mt-1">
-                        {lead.status === 'opened' ? '👀 Opened demo' : '✅ Used demo'}
-                        {lead.demo_viewed_at && ` • ${new Date(lead.demo_viewed_at).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {lead.email && (
-                        <Button
-                          onClick={() => sendFollowUp(lead)}
-                          className="h-9 px-4 text-sm bg-purple-600 hover:bg-purple-700"
-                        >
-                          Send Follow-Up
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Kanban Board */}
       {activeTab === 'pipeline' && (
+        <>
         <div className="overflow-x-auto pb-4 -mx-4 px-4">
           <div className="flex gap-3 min-w-max">
             {PIPELINE_STAGES.map((stage) => (
@@ -510,6 +461,42 @@ export function LeadsPage() {
             ))}
           </div>
         </div>
+
+        {/* Follow Up Section */}
+        {followUpLeads.length > 0 && (
+          <div className="mt-6 space-y-3">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              Follow Up <span className="bg-purple-500 text-xs px-2 py-0.5 rounded-full text-white">{followUpLeads.length}</span>
+            </h2>
+            <p className="text-sm text-slate-400">Leads that opened or used their demo</p>
+            <div className="space-y-2">
+              {followUpLeads.map((lead) => (
+                <div key={lead.id} className="bg-slate-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{lead.business_name}</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        {lead.email} {lead.city && `• ${lead.city}`}
+                      </div>
+                      <div className="text-xs text-purple-400 mt-1">
+                        {lead.status === 'opened' ? '👁️ Opened' : '✅ Used'}
+                        {lead.demo_viewed_at && ` • ${new Date(lead.demo_viewed_at).toLocaleDateString()}`}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setFollowUpLead(lead)}
+                      variant="outline"
+                      className="h-9 px-4 text-sm border-purple-500 text-purple-400 hover:bg-purple-500/10"
+                    >
+                      Preview & Send
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Lead Detail Modal */}
@@ -771,6 +758,44 @@ export function LeadsPage() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Follow Up Preview Modal */}
+      <Dialog open={!!followUpLead} onOpenChange={() => setFollowUpLead(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Follow Up: {followUpLead?.business_name}</DialogTitle></DialogHeader>
+          {followUpLead && (() => {
+            const firstName = (followUpLead.owner_name?.split(' ')[0] || 'there');
+            const isSWFL = followUpLead.city?.toLowerCase().includes('cape') || 
+                            followUpLead.city?.toLowerCase().includes('fort myers') || 
+                            followUpLead.city?.toLowerCase().includes('naples') || 
+                            followUpLead.city?.toLowerCase().includes('bonita') ||
+                            followUpLead.city?.toLowerCase().includes('estero') ||
+                            followUpLead.city?.toLowerCase().includes('lehigh');
+            const promoHtml = isSWFL ? `<div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>` : '';
+            const previewHtml = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
+              <p>Hi ${firstName},</p>
+              <p>Just wanted to follow up on the demo I sent over for ${followUpLead.business_name}. Hope you got a chance to take a look!</p>
+              <p>Any questions or want to see how this would work for your specific setup? Just reply and let me know.${promoHtml}</p>
+              <p>Best,<br><strong>Beck Hoefling</strong></p>
+            </div>
+            <div style="margin-top:16px;"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | fastflow.bek-tech.com | (239) 946-1776</span></b></div>`;
+            return (
+              <div className="space-y-4">
+                <div className="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
+                  <div><span className="text-slate-400">To:</span> {followUpLead.email}</div>
+                  <div><span className="text-slate-400">Subject:</span> Quick follow-up on your {followUpLead.business_name} demo</div>
+                  {isSWFL && <div className="text-green-400">🎁 SWFL promo included</div>}
+                </div>
+                <div className="border border-slate-700 rounded-lg p-4 bg-white text-black text-sm" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setFollowUpLead(null)}>Cancel</Button>
+                  <Button onClick={() => { sendFollowUp(followUpLead); setFollowUpLead(null); }}>Send Follow-Up</Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
