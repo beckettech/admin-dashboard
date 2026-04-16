@@ -164,6 +164,11 @@ export async function getDemoViewStats() {
 
 // Leads
 export async function getLeads(status?: string) {
+  // Ensure column exists
+  try {
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`;
+  } catch {}
+  
   let query = 'SELECT * FROM leads WHERE deleted_at IS NULL ORDER BY created_at DESC';
   const params: string[] = [];
   
