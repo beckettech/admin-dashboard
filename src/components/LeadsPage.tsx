@@ -94,7 +94,7 @@ export function LeadsPage() {
   const [callResults, setCallResults] = useState<any>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showNoAnswerOnly, setShowNoAnswerOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'calls'>('pipeline');
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'calls' | 'followup'>('pipeline');
 
   useEffect(() => {
     fetchLeads();
@@ -117,6 +117,7 @@ export function LeadsPage() {
   const calledLeads = leads.filter(l => l.call_status && l.call_status !== 'uncalled');
   const uncalledLeads = leads.filter(l => !l.call_status || l.call_status === 'uncalled');
   const noAnswerCount = leads.filter(l => l.call_status === 'no_answer').length;
+  const followUpLeads = leads.filter(l => l.status === 'opened' || l.status === 'used');
 
   const handleCreate = async (formData: FormData) => {
     await fetch('/api/leads', {
@@ -226,6 +227,60 @@ export function LeadsPage() {
     }
   };
 
+  const sendFollowUp = async (lead: Lead) => {
+    const firstName = (lead.owner_name?.split(' ')[0] || 'there');
+    const isSWFL = lead.city?.toLowerCase().includes('cape') || 
+                    lead.city?.toLowerCase().includes('fort myers') || 
+                    lead.city?.toLowerCase().includes('naples') || 
+                    lead.city?.toLowerCase().includes('bonita') ||
+                    lead.city?.toLowerCase().includes('estero') ||
+                    lead.city?.toLowerCase().includes('lehigh');
+    
+    const promoLine = isSWFL ? '\n\n🎁 SWFL Local Special: Use code SWFL50 for 50% off every month!' : '';
+    
+    const subject = `Quick follow-up on your ${lead.business_name} demo`;
+    const html = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
+      <p>Hi ${firstName},</p>
+      <p>Saw you checked out the ${lead.business_name} demo — hope it gave you a sense of how AI could help capture more customers!</p>
+      <p>Any questions or want to see how this would work for your specific setup? Just reply and let me know.${promoLine ? '</p><div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>SWFL Local Special</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>' : ''}</p>
+      <p>Best,<br><strong>Beck Hoefling</strong></p>
+    </div>
+    <div style="margin-top:16px;"><a href="https://fastflow.bek-tech.com"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | <a href="https://fastflow.bek-tech.com" style="color:#2563eb;text-decoration:none;">fastflow.bek-tech.com</a> | (239) 946-1776</span></b></div>`;
+    
+    const text = `Hi ${firstName},\n\nSaw you checked out the ${lead.business_name} demo — hope it gave you a sense of how AI could help capture more customers!${promoLine}\n\nAny questions or want to see how this would work for your specific setup? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
+    
+    try {
+      const res = await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: lead.email,
+          toName: lead.owner_name,
+          subject,
+          html,
+          text
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ Follow-up sent to ${lead.email}`);
+        // Update status to followed_up
+        await fetch(`/api/leads/${lead.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'followed_up' })
+        });
+        fetchLeads();
+      } else if (data.bounced) {
+        alert(`❌ Email bounced: ${data.reason}`);
+      } else {
+        alert(`❌ Failed: ${data.error}`);
+      }
+    } catch (e) {
+      alert(`❌ Error: ${e}`);
+    }
+  };
+
   const channelToType = (channel?: string | null) => {
     const c = (channel || '').toLowerCase();
     if (c.includes('voice')) return 'voice';
@@ -272,11 +327,17 @@ export function LeadsPage() {
         >
           Call Log {calledLeads.length > 0 && <span className="bg-blue-500 text-xs px-1.5 rounded">{calledLeads.length}</span>}
         </button>
+        <button
+          onClick={() => setActiveTab('followup')}
+          className={`px-4 py-2 text-sm font-medium rounded-t flex items-center gap-2 ${activeTab === 'followup' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Follow Up {followUpLeads.length > 0 && <span className="bg-purple-500 text-xs px-1.5 rounded">{followUpLeads.length}</span>}
+        </button>
       </div>
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : 'Call Log'}</h1>
+        <h1 className="text-2xl font-bold">{activeTab === 'pipeline' ? 'Demos' : activeTab === 'calls' ? 'Call Log' : 'Follow Up'}</h1>
         <div className="flex gap-2 flex-wrap">
           {activeTab === 'pipeline' && noAnswerCount > 0 && (
             <Button
@@ -356,6 +417,51 @@ export function LeadsPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Follow Up Tab */}
+      {activeTab === 'followup' && (
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 text-sm text-slate-300">
+            <p>These leads opened or used their demo. Send a quick follow-up with the SWFL50 promo code!</p>
+          </div>
+          
+          {followUpLeads.length === 0 ? (
+            <div className="bg-slate-800/50 rounded-lg p-8 text-center text-slate-400">
+              <p>No leads have opened their demo yet.</p>
+              <p className="text-sm mt-2">When leads view or interact with their demo, they'll appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {followUpLeads.map((lead) => (
+                <div key={lead.id} className="bg-slate-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{lead.business_name}</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        {lead.email} {lead.city && `• ${lead.city}`}
+                      </div>
+                      <div className="text-xs text-purple-400 mt-1">
+                        {lead.status === 'opened' ? '👀 Opened demo' : '✅ Used demo'}
+                        {lead.demo_viewed_at && ` • ${new Date(lead.demo_viewed_at).toLocaleDateString()}`}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {lead.email && (
+                        <Button
+                          onClick={() => sendFollowUp(lead)}
+                          className="h-9 px-4 text-sm bg-purple-600 hover:bg-purple-700"
+                        >
+                          Send Follow-Up
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
