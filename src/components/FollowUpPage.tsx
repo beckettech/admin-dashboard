@@ -19,6 +19,7 @@ interface Lead {
   status: string;
   demo_viewed_at?: string | null;
   demo_url?: string | null;
+  contacts?: string; // JSON string of contacts array
 }
 
 export function FollowUpPage() {
@@ -43,9 +44,26 @@ export function FollowUpPage() {
     });
   };
 
+  // Helper to get best email from contacts (skip bounced)
+  const getBestEmail = (lead: Lead): string => {
+    try {
+      const contacts = JSON.parse(lead.contacts || '[]');
+      // Find first non-bounced email
+      const validContact = contacts.find((c: { email?: string; bounce_status?: string }) => 
+        c.email && c.bounce_status !== 'bounced'
+      );
+      return validContact?.email || lead.email || '';
+    } catch {
+      return lead.email || '';
+    }
+  };
+
   const sendFollowUp = async (lead: Lead) => {
     setSending(true);
-    const firstName = (lead.owner_name?.split(' ')[0] || 'there');
+    // Use manually edited email if set, otherwise get best email from contacts
+    const targetEmail = editEmail || getBestEmail(lead);
+    const targetName = editName || lead.owner_name;
+    const firstName = (targetName?.split(' ')[0] || 'there');
     const isSWFL = lead.city?.toLowerCase().includes('cape') ||
                     lead.city?.toLowerCase().includes('fort myers') ||
                     lead.city?.toLowerCase().includes('naples') ||
@@ -73,8 +91,8 @@ export function FollowUpPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: lead.email,
-          toName: lead.owner_name,
+          to: targetEmail,
+          toName: targetName,
           subject,
           html,
           text
@@ -182,21 +200,46 @@ export function FollowUpPage() {
                 {/* Inline Preview */}
                 {followUpLead?.id === lead.id && (
                   <div className="mt-4 pt-4 border-t border-slate-700">
-                    <div className="bg-slate-900/50 rounded-lg p-3 text-xs mb-3 space-y-1">
-                      <div><span className="text-slate-500">To:</span> {lead.email}</div>
-                      <div><span className="text-slate-500">Subject:</span> Quick follow-up on your {lead.business_name} demo</div>
-                      {isSWFL && <div className="text-green-400">🎁 SWFL promo included</div>}
+                    {/* Editable fields */}
+                    <div className="bg-slate-900/50 rounded-lg p-3 mb-3 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <span className="text-slate-500 text-xs w-16">Name:</span>
+                        <input
+                          type="text"
+                          className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"
+                          defaultValue={lead.owner_name || ''}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Contact name"
+                        />
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-slate-500 text-xs w-16">Email:</span>
+                        <input
+                          type="email"
+                          className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm"
+                          defaultValue={getBestEmail(lead)}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          placeholder="email@example.com"
+                        />
+                        {getBestEmail(lead) !== lead.email && (
+                          <span className="text-xs text-green-400">✓ Best email</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Subject: Quick follow-up on your {lead.business_name} demo
+                      </div>
+                      {isSWFL && <div className="text-green-400 text-xs">🎁 SWFL promo included (SWFL50 for 50% off)</div>}
                     </div>
                     <div
                       className="border border-slate-700 rounded-lg p-4 bg-white text-black text-sm max-h-64 overflow-y-auto"
                       dangerouslySetInnerHTML={{ __html: previewHtml }}
                     />
                     <div className="flex gap-2 justify-end mt-3">
-                      <Button variant="outline" size="sm" onClick={() => setFollowUpLead(null)}>Cancel</Button>
+                      <Button variant="outline" size="sm" onClick={() => { setFollowUpLead(null); setEditName(''); setEditEmail(''); }}>Cancel</Button>
                       <Button
                         size="sm"
-                        onClick={() => { sendFollowUp(lead); setFollowUpLead(null); }}
-                        disabled={sending || !lead.email}
+                        onClick={() => { sendFollowUp(lead); setFollowUpLead(null); setEditName(''); setEditEmail(''); }}
+                        disabled={sending || !getBestEmail(lead)}
                       >
                         {sending ? 'Sending...' : 'Send Follow-Up'}
                       </Button>
