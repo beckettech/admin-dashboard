@@ -28,9 +28,7 @@ export function FollowUpPage() {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [sending, setSending] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-
+  
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -48,15 +46,15 @@ export function FollowUpPage() {
   const sendFollowUp = async (lead: Lead) => {
     setSending(true);
     const firstName = (lead.owner_name?.split(' ')[0] || 'there');
-    const isSWFL = lead.city?.toLowerCase().includes('cape') || 
-                    lead.city?.toLowerCase().includes('fort myers') || 
-                    lead.city?.toLowerCase().includes('naples') || 
+    const isSWFL = lead.city?.toLowerCase().includes('cape') ||
+                    lead.city?.toLowerCase().includes('fort myers') ||
+                    lead.city?.toLowerCase().includes('naples') ||
                     lead.city?.toLowerCase().includes('bonita') ||
                     lead.city?.toLowerCase().includes('estero') ||
                     lead.city?.toLowerCase().includes('lehigh');
-    
+
     const promoHtml = isSWFL ? `<div style="background:#f0fdf4;border:1px solid #22c55e;border-radius:8px;padding:12px 16px;margin:16px 0;"><p style="margin:0;font-size:15px;">🎁 <strong>New SWFL Local Deal</strong>: Use code <code style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:bold;">SWFL50</code> for 50% off every month!</p></div>` : '';
-    
+
     const subject = `Quick follow-up on your ${lead.business_name} demo`;
     const html = `<div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.7;max-width:600px;">
       <p>Hi ${firstName},</p>
@@ -66,10 +64,10 @@ export function FollowUpPage() {
       <p>Best,<br><strong>Beck Hoefling</strong></p>
     </div>
     <div style="margin-top:16px;"><a href="https://fastflow.bek-tech.com"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | <a href="https://fastflow.bek-tech.com" style="color:#2563eb;text-decoration:none;">fastflow.bek-tech.com</a> | (239) 946-1776</span></b></div>`;
-    
+
     const promoText = isSWFL ? '\n\n🎁 New SWFL Local Deal: Use code SWFL50 for 50% off every month!' : '';
     const text = `Hi ${firstName},\n\nJust wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!${promoText}\n\nAny questions or want to see how this would work for your specific setup? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
-    
+
     try {
       const res = await fetch('/api/email/send', {
         method: 'POST',
@@ -120,7 +118,7 @@ export function FollowUpPage() {
         )}
       </div>
 
-      <p className="text-sm text-slate-400">Leads that opened or used their demo — send a quick follow-up!</p>
+      <p className="text-sm text-slate-400">Leads that opened or used their demo - send a quick follow-up!</p>
 
       {leads.length === 0 ? (
         <div className="bg-slate-800/50 rounded-lg p-8 text-center text-slate-400">
@@ -132,9 +130,9 @@ export function FollowUpPage() {
         <div className="space-y-3">
           {leads.map((lead) => {
             const firstName = (lead.owner_name?.split(' ')[0] || 'there');
-            const isSWFL = lead.city?.toLowerCase().includes('cape') || 
-                            lead.city?.toLowerCase().includes('fort myers') || 
-                            lead.city?.toLowerCase().includes('naples') || 
+            const isSWFL = lead.city?.toLowerCase().includes('cape') ||
+                            lead.city?.toLowerCase().includes('fort myers') ||
+                            lead.city?.toLowerCase().includes('naples') ||
                             lead.city?.toLowerCase().includes('bonita') ||
                             lead.city?.toLowerCase().includes('estero') ||
                             lead.city?.toLowerCase().includes('lehigh');
@@ -189,14 +187,14 @@ export function FollowUpPage() {
                       <div><span className="text-slate-500">Subject:</span> Quick follow-up on your {lead.business_name} demo</div>
                       {isSWFL && <div className="text-green-400">🎁 SWFL promo included</div>}
                     </div>
-                    <div 
+                    <div
                       className="border border-slate-700 rounded-lg p-4 bg-white text-black text-sm max-h-64 overflow-y-auto"
                       dangerouslySetInnerHTML={{ __html: previewHtml }}
                     />
                     <div className="flex gap-2 justify-end mt-3">
                       <Button variant="outline" size="sm" onClick={() => setFollowUpLead(null)}>Cancel</Button>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => { sendFollowUp(lead); setFollowUpLead(null); }}
                         disabled={sending || !lead.email}
                       >
