@@ -78,13 +78,12 @@ export function FollowUpPage() {
       <p>Hi ${firstName},</p>
       <p>Just wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!</p>
       ${promoHtml}
-      <p>Any questions? Just reply and let me know!</p>
       <p>Best,<br><strong>Beck Hoefling</strong></p>
     </div>
     <div style="margin-top:16px;"><a href="https://fastflow.bek-tech.com"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></a><b><span style="font-size:16px;">FastFlow | <a href="https://fastflow.bek-tech.com" style="color:#2563eb;text-decoration:none;">fastflow.bek-tech.com</a> | (239) 946-1776</span></b></div>`;
 
     const promoText = '\n\n🎁 New offer for local businesses — we just launched a locals-only deal. Use code SWFL50 at checkout for 50% off every month.';
-    const text = `Hi ${firstName},\n\nJust wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!${promoText}\n\nAny questions? Just reply and let me know.\n\nBest,\nBeck Hoefling`;
+    const text = `Hi ${firstName},\n\nJust wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!${promoText}\n\nBest,\nBeck Hoefling`;
 
     try {
       const res = await fetch('/api/email/send', {
@@ -159,7 +158,6 @@ export function FollowUpPage() {
               <p>Hi ${firstName},</p>
               <p>Just wanted to follow up on the demo I sent over for ${lead.business_name}. Hope you got a chance to take a look!</p>
               ${promoHtml}
-              <p>Any questions? Just reply and let me know!</p>
               <p>Best,<br><strong>Beck Hoefling</strong></p>
             </div>
             <div style="margin-top:16px;"><img src="https://fastflow.bek-tech.com/logo_large.png" alt="FastFlow" width="58" height="58" style="display:block;"></div>`;
