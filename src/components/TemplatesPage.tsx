@@ -98,6 +98,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book estimates, handle design inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for project quotes and construction milestones'],
     terminology: { bookAction: 'book estimates', followUpItem: 'project quotes and construction milestones' },
   },
+  pressurewash: {
+    label: 'Pressure Washing',
+    industry: 'pressure washing and exterior cleaning companies',
+    services: ['answer calls, book estimates, handle driveway/house washing inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for recurring washes and seasonal cleanings'],
+    terminology: { bookAction: 'book estimates', followUpItem: 'recurring washes and seasonal cleanings' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
