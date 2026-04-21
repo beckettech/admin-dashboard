@@ -104,6 +104,12 @@ const NICHES: Record<string, { label: string; industry: string; services: string
     services: ['answer calls, book estimates, handle driveway/house washing inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for recurring washes and seasonal cleanings'],
     terminology: { bookAction: 'book estimates', followUpItem: 'recurring washes and seasonal cleanings' },
   },
+  poolscreen: {
+    label: 'Pool Screens',
+    industry: 'pool screen and lanai enclosure companies',
+    services: ['answer calls, book estimates, handle screen repair and replacement inquiries', 'never lose a customer when you can\'t pick up', 'respond to social messages instantly', 'automated follow-ups for seasonal inspections and rescreening'],
+    terminology: { bookAction: 'book estimates', followUpItem: 'seasonal inspections and rescreening' },
+  },
 };
 
 // ─── Demo types ───────────────────────────────────────────────
