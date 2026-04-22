@@ -147,7 +147,7 @@ function buildEmail(p: {
     social: { label: 'Facebook & Instagram DM automation', plain: `respond to social messages instantly`, html: `respond to social messages instantly` },
     lead_ads: { label: 'Facebook Lead Ads AI', plain: `instantly text leads who click your ads and book them automatically`, html: `instantly text leads who click your ads and book them automatically` },
     organic: { label: 'Facebook Organic auto-DM', plain: `auto-message everyone who comments on your posts`, html: `auto-message everyone who comments on your posts` },
-    reminders: { label: 'Reorder & checkup reminders', plain: `automated follow-ups for maintenance, filters, etc.`, html: `automated follow-ups for maintenance, filters, etc.` },
+    reminders: { label: 'Follow-up automation', plain: `automated follow-ups for ${niche.terminology.followUpItem}`, html: `automated follow-ups for ${niche.terminology.followUpItem}` },
     webchat: { label: 'AI webchat', plain: `answer questions and capture customers on your website 24/7`, html: `answer questions and capture customers on your website 24/7` },
     sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
   };
@@ -279,7 +279,7 @@ function buildDM(p: {
     `Beyond that, FastFlow also offers:`,
     `- Missed call text-back`,
     `- Facebook & Instagram DM automation`,
-    `- ${niche.terminology.followUpItem.charAt(0).toUpperCase() + niche.terminology.followUpItem.slice(1)} reminders`,
+    `- Automated ${niche.terminology.followUpItem} follow-ups`,
   ];
 
   if (p.isLocal) {
