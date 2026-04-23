@@ -580,9 +580,14 @@ export function TemplatesPage() {
                     const normalized = normalizeStatus(l.status);
                     return normalized === 'created' && l.bounce_status !== 'bounced';
                   })
+                  .sort((a, b) => {
+                    const aHas = a.email && a.email.includes('@') ? 0 : 1;
+                    const bHas = b.email && b.email.includes('@') ? 0 : 1;
+                    return aHas - bHas;
+                  })
                   .map(l => (
                   <option key={l.id} value={l.id}>
-                    {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}{l.bounce_status === 'bounced' ? ' ❌' : ''}
+                    {l.business_name}{l.channel ? ` · ${l.channel}` : ''}{l.status ? ` [${l.status}]` : ''}{l.bounce_status === 'bounced' ? ' ❌' : ''}{l.email ? '' : ' · no email'}
                   </option>
                 ))}
               </select>
