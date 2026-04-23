@@ -521,7 +521,7 @@ export function LeadsPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => { const link = selectedLead.demo_url || demoLink(selectedLead); const url = new URL(link); url.searchParams.set('internal', 'true'); window.open(url.toString(), '_blank'); }}>Open Demo</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => { window.open(demoLink(selectedLead) + '&internal=true', '_blank'); }}>Open Demo</Button>
                   {selectedLead.bounce_status === 'bounced' && (
                     <Button variant="outline" className="flex-1 text-orange-400 border-orange-800 hover:bg-orange-900/20" onClick={async () => {
                       if (!confirm('Reset bounce status and try sending again?')) return;
