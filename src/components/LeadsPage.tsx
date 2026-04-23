@@ -247,7 +247,11 @@ export function LeadsPage() {
     if (showNoAnswerOnly) {
       filtered = filtered.filter(l => l.call_status === 'no_answer');
     }
-    return filtered;
+    return filtered.sort((a, b) => {
+      const aHas = a.email && a.email.includes('@') ? 0 : 1;
+      const bHas = b.email && b.email.includes('@') ? 0 : 1;
+      return aHas - bHas;
+    });
   };
 
   if (loading) return (
