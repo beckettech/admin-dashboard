@@ -152,18 +152,23 @@ function buildEmail(p: {
     sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
   };
 
+  // Niches where follow-up reminders don't make sense — use SMS instead
+  const noRemindersNiches = ['poolscreen', 'poolbuilder', 'realestate', 'contractor', 'roofing'];
+  const useReminders = !noRemindersNiches.includes(p.niche);
+
   // Build upsell list: always show 4 items, exclude the current demo type
+  const fourthSlot = useReminders ? 'reminders' : 'sms';
   const upsellOrder = p.demoType === 'voice'
-    ? ['missed', 'social', 'webchat', 'reminders']
+    ? ['missed', 'social', 'webchat', fourthSlot]
     : p.demoType === 'social'
-    ? ['voice', 'missed', 'webchat', 'reminders']
+    ? ['voice', 'missed', 'webchat', fourthSlot]
     : p.demoType === 'sms'
-    ? ['voice', 'social', 'webchat', 'reminders']
+    ? ['voice', 'social', 'webchat', useReminders ? 'missed' : 'reminders']
     : p.demoType === 'lead_ads'
     ? ['voice', 'organic', 'webchat', 'missed']
     : p.demoType === 'organic'
     ? ['voice', 'lead_ads', 'webchat', 'missed']
-    : /* webchat default */ ['voice', 'missed', 'social', 'reminders'];
+    : /* webchat default */ ['voice', 'missed', 'social', fourthSlot];
 
   // Apply niche-specific overrides to upsell items
   const upsellItems = upsellOrder.map(k => {
@@ -267,6 +272,8 @@ function buildDM(p: {
   const niche = NICHES[p.niche] || NICHES.hvac;
   const demoLabel = DEMO_TYPES.find(d => d.value === p.demoType)?.label || 'Demo';
   const localIntro = p.isLocal ? 'SWFL local here ' : '';
+  const noRemindersNiches = ['poolscreen', 'poolbuilder', 'realestate', 'contractor', 'roofing'];
+  const useReminders = !noRemindersNiches.includes(p.niche);
 
   const lines = [
     `Hey there! ${localIntro}Beck from FastFlow.`,
@@ -279,7 +286,9 @@ function buildDM(p: {
     `Beyond that, FastFlow also offers:`,
     `- Missed call text-back`,
     `- Facebook & Instagram DM automation`,
-    `- Automated ${niche.terminology.followUpItem} follow-ups`,
+    useReminders
+      ? `- Automated ${niche.terminology.followUpItem} follow-ups`
+      : `- SMS / text-back automation`,
   ];
 
   if (p.isLocal) {
