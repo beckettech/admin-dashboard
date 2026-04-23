@@ -395,7 +395,7 @@ export function LeadsPage() {
                         <div className="flex gap-1 mt-2">
                           {lead.phone && <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs px-2 py-1 bg-slate-700 rounded">📞</a>}
                           {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className={`text-xs px-2 py-1 rounded ${lead.bounce_status === 'bounced' ? 'bg-red-900 text-red-300' : 'bg-slate-700'}`}>✉️</a>}
-                          <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(demoLink(lead)); alert('Copied!'); }} className="text-xs px-2 py-1 bg-slate-700 rounded">🔗</button>
+                          {lead.facebook && <span className="text-xs px-2 py-1 bg-blue-900/40 rounded" title="Has Facebook page">📘</span>}
                         </div>
                       </div>
                     );
@@ -521,7 +521,7 @@ export function LeadsPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(selectedLead.demo_url || demoLink(selectedLead)); alert('Copied!'); }}>Copy Demo Link</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => { const link = selectedLead.demo_url || demoLink(selectedLead); const url = new URL(link); url.searchParams.set('internal', 'true'); window.open(url.toString(), '_blank'); }}>Open Demo</Button>
                   {selectedLead.bounce_status === 'bounced' && (
                     <Button variant="outline" className="flex-1 text-orange-400 border-orange-800 hover:bg-orange-900/20" onClick={async () => {
                       if (!confirm('Reset bounce status and try sending again?')) return;
