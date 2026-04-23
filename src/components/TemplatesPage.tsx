@@ -150,25 +150,27 @@ function buildEmail(p: {
     reminders: { label: 'Follow-up automation', plain: `automated follow-ups for ${niche.terminology.followUpItem}`, html: `automated follow-ups for ${niche.terminology.followUpItem}` },
     webchat: { label: 'AI webchat', plain: `answer questions and capture customers on your website 24/7`, html: `answer questions and capture customers on your website 24/7` },
     sms: { label: 'SMS / text-back automation', plain: `instant replies to missed calls and inbound texts`, html: `instant replies to missed calls and inbound texts` },
+    reviews: { label: 'Review collection texts', plain: `automated follow-up texts asking customers to leave a review`, html: `automated follow-up texts asking customers to leave a review` },
+    socialvideo: { label: 'Social media video posts', plain: `automated short-form video content for Facebook, Instagram & TikTok`, html: `automated short-form video content for Facebook, Instagram &amp; TikTok` },
   };
 
-  // Niches where follow-up reminders don't make sense — use SMS instead
+  // Niches where follow-up reminders don't make sense — use review texts instead
   const noRemindersNiches = ['poolscreen', 'poolbuilder', 'realestate', 'contractor', 'roofing'];
   const useReminders = !noRemindersNiches.includes(p.niche);
 
-  // Build upsell list: always show 4 items, exclude the current demo type
-  const fourthSlot = useReminders ? 'reminders' : 'sms';
+  // Build upsell list: always show 5 items, exclude the current demo type
+  const fourthSlot = useReminders ? 'reminders' : 'reviews';
   const upsellOrder = p.demoType === 'voice'
-    ? ['missed', 'social', 'webchat', fourthSlot]
+    ? ['missed', 'social', 'webchat', fourthSlot, 'socialvideo']
     : p.demoType === 'social'
-    ? ['voice', 'missed', 'webchat', fourthSlot]
+    ? ['voice', 'missed', 'webchat', fourthSlot, 'socialvideo']
     : p.demoType === 'sms'
-    ? ['voice', 'social', 'webchat', useReminders ? 'missed' : 'reminders']
+    ? ['voice', 'social', 'webchat', useReminders ? 'missed' : 'reviews', 'socialvideo']
     : p.demoType === 'lead_ads'
-    ? ['voice', 'organic', 'webchat', 'missed']
+    ? ['voice', 'organic', 'webchat', 'missed', 'socialvideo']
     : p.demoType === 'organic'
-    ? ['voice', 'lead_ads', 'webchat', 'missed']
-    : /* webchat default */ ['voice', 'missed', 'social', fourthSlot];
+    ? ['voice', 'lead_ads', 'webchat', 'missed', 'socialvideo']
+    : /* webchat default */ ['voice', 'missed', 'social', fourthSlot, 'socialvideo'];
 
   // Apply niche-specific overrides to upsell items
   const upsellItems = upsellOrder.map(k => {
@@ -288,7 +290,8 @@ function buildDM(p: {
     `- Facebook & Instagram DM automation`,
     useReminders
       ? `- Automated ${niche.terminology.followUpItem} follow-ups`
-      : `- SMS / text-back automation`,
+      : `- Automated review collection texts`,
+    `- Social media video posts automation`,
   ];
 
   if (p.isLocal) {
