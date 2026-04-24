@@ -484,7 +484,15 @@ export function TemplatesPage() {
     else if (['pool clean', 'pool service', 'pool maint', 'pool repair', 'pool chem'].some(k => name.includes(k))) setNiche('poolservice');
     else if (['pool build', 'pool construct', 'pool install', 'pool design', 'custom pool', 'pool contractor'].some(k => name.includes(k))) setNiche('poolbuilder');
     else if (['pool'].some(k => name.includes(k))) setNiche('poolservice');
-    else if (lead.niche) setNiche(lead.niche);
+    else if (['pressure', 'wash', 'power wash', 'cleaning', 'soft wash'].some(k => name.includes(k))) setNiche('pressurewash');
+    else if (['screen', 'lanai', 'enclosure', 'cage', 'rescreen'].some(k => name.includes(k))) setNiche('poolscreen');
+    else if (['hvac', 'ac ', 'air cond', 'heating', 'cooling', 'comfort', 'climate', 'refriger'].some(k => name.includes(k))) setNiche('hvac');
+    else if (lead.niche) {
+      const n = lead.niche.toLowerCase().replace(/[\s_-]/g, '');
+      if (NICHES[n]) setNiche(n);
+      else if (NICHES[n.replace(/ing$/, '')]) setNiche(n.replace(/ing$/, ''));
+      else setNiche('hvac');
+    }
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
     setSelectedFacebook(lead.facebook || null);
