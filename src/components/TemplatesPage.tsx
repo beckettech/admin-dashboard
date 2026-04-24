@@ -491,32 +491,6 @@ export function TemplatesPage() {
     else if (['pressure', 'wash', 'power wash', 'soft wash'].some(k => name.includes(k))) setNiche('pressurewash');
     else if (['screen', 'lanai', 'enclosure', 'cage', 'rescreen'].some(k => name.includes(k))) setNiche('poolscreen');
     else if (['hvac', 'ac ', 'air cond', 'heating', 'cooling', 'comfort', 'climate', 'refriger'].some(k => name.includes(k))) setNiche('hvac');
-    } || '').toLowerCase();
-    const plumbingKw = ['plumb', 'pipe', 'drain', 'sewer', 'water heater', 'septic', 'rooter', 'toilet'];
-    const roofingKw = ['roof', 'shingle', 'gutter'];
-    const electricalKw = ['electric', 'wiring', 'panel'];
-    const dentalKw = ['dental', 'dentist', 'ortho'];
-    const restaurantKw = ['restaurant', 'restaur', 'cafe', 'catering', 'diner', 'food', 'grill', 'pizza', 'burger', 'taco', 'sushi', 'bakery', 'bistro', 'kitchen', 'bbq', 'wing'];
-    const salonKw = ['salon', 'spa', 'barber', 'hair', 'nail', 'beauty'];
-    const realestateKw = ['real estate', 'realtor', 'property', 'realty', 'realty group', 'properties'];
-    const lawncareKw = ['lawn', 'landscape', 'landscaping', 'yard', 'mowing', 'turf', 'grounds', 'garden'];
-    if (plumbingKw.some(k => name.includes(k))) setNiche('plumbing');
-    else if (roofingKw.some(k => name.includes(k))) setNiche('roofing');
-    else if (electricalKw.some(k => name.includes(k))) setNiche('electrical');
-    else if (dentalKw.some(k => name.includes(k))) setNiche('dental');
-    else if (restaurantKw.some(k => name.includes(k))) setNiche('restaurant');
-    else if (salonKw.some(k => name.includes(k))) setNiche('salon');
-    else if (realestateKw.some(k => name.includes(k))) setNiche('realestate');
-    else if (lawncareKw.some(k => name.includes(k))) setNiche('lawncare');
-    else if (['contractor', 'construct', 'builder', 'remodel', 'renovation'].some(k => name.includes(k))) setNiche('contractor');
-    else if (['detail', 'auto spa', 'car wash', 'ceramic', 'window tint', 'paint correction'].some(k => name.includes(k))) setNiche('cardetail');
-    else if (['pest', 'extermin', 'termite', 'rodent', 'bug', 'insect', 'mosquito', 'wildlife removal'].some(k => name.includes(k))) setNiche('pestcontrol');
-    else if (['pool clean', 'pool service', 'pool maint', 'pool repair', 'pool chem'].some(k => name.includes(k))) setNiche('poolservice');
-    else if (['pool build', 'pool construct', 'pool install', 'pool design', 'custom pool', 'pool contractor'].some(k => name.includes(k))) setNiche('poolbuilder');
-    else if (['pool'].some(k => name.includes(k))) setNiche('poolservice');
-    else if (['pressure', 'wash', 'power wash', 'cleaning', 'soft wash'].some(k => name.includes(k))) setNiche('pressurewash');
-    else if (['screen', 'lanai', 'enclosure', 'cage', 'rescreen'].some(k => name.includes(k))) setNiche('poolscreen');
-    else if (['hvac', 'ac ', 'air cond', 'heating', 'cooling', 'comfort', 'climate', 'refriger'].some(k => name.includes(k))) setNiche('hvac');
     }
     // Only show after-hours line if we confirmed they don't pickup (call_status = no_answer)
     setMissedCall(lead.call_status === 'no_answer');
