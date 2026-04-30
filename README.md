@@ -1,89 +1,142 @@
-# FastFlow Admin Dashboard
+<div align="center">
 
-Admin dashboard for FastFlow - manage leads, demos, and customers.
+  # 📊 FastFlow Admin
+  ### The Command Center for AI-Powered Lead Generation
 
-## Setup
+  Manage leads, track demos, send follow-ups, and monitor your entire sales pipeline from one dashboard.
 
-### 1. Create Vercel Postgres Database
+  [🌐 Live Dashboard](https://fastflow-admin.vercel.app) · [⚡ FastFlow Site](https://fastflow.bek-tech.com) · [📧 Contact](mailto:fastflow@bek-tech.com)
+
+  <img src="screenshots/dashboard.png" alt="FastFlow Admin Dashboard" width="100%" />
+
+</div>
+
+---
+
+## ✨ Features
+
+### 🏠 Dashboard
+Real-time metrics — demo views, total leads, pipeline breakdown by stage, views by type.
+
+### 🎯 Leads Pipeline (Kanban)
+Drag-and-drop kanban board with stages: Created → Sent → Opened → Followed Up → Used → Not Interested. Sort by email availability, filter by call status.
+
+### 📧 Email Templates
+Niche-aware outreach email templates for 16+ industries. Auto-detects the right template from business name or stored niche. Preview before sending, edit recipient name/email inline.
+
+### 🔄 Follow-Up Automation
+One-click follow-up emails with promo code integration (SWFL50). Bounce-aware email selection, manual override for name/email, inline HTML preview.
+
+### 📞 Prospects
+Outbound calling with Twilio integration. After-hours detection to identify businesses without 24/7 coverage — prime targets for AI voice employees.
+
+### 📊 Demos
+Track every demo view with analytics — who viewed, when, what type (voice phone, web chat), and interaction data.
+
+---
+
+## 🏗️ Architecture
+
+| Layer | Tech |
+|-------|------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19, Tailwind CSS |
+| Database | Vercel Postgres (Neon) |
+| Auth | JWT with cookie-based sessions |
+| Email | Zoho Mail API |
+| Voice | Twilio + Vapi |
+| Payments | Stripe |
+| Deployment | Vercel |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Database
 
 ```bash
 vercel postgres create fastflow-db
-vercel postgres connect fastflow-db
 ```
 
-### 2. Run Schema
+Run `src/lib/db/schema.sql` to set up tables.
 
-Connect to your database and run the SQL in `src/lib/db/schema.sql`, or:
+### 2. Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `POSTGRES_URL` | Auto-added by Vercel Postgres |
+| `ADMIN_PASSWORD` | Login password |
+| `ADMIN_JWT_SECRET` | JWT signing secret |
+| `STRIPE_SECRET_KEY` | Stripe API key |
+| `TWILIO_ACCOUNT_SID` | Twilio credentials |
+| `TWILIO_AUTH_TOKEN` | Twilio auth |
+| `TWILIO_PHONE_NUMBER` | Outbound caller ID |
+
+### 3. Deploy
 
 ```bash
-vercel postgres query fastflow-db < src/lib/db/schema.sql
+npm install
+npm run dev      # Local development
+vercel --prod    # Deploy to production
 ```
 
-### 3. Set Environment Variables
+---
 
-In Vercel dashboard or via CLI:
+## 📡 API Endpoints
 
-```bash
-vercel env add ADMIN_PASSWORD
-# Enter a secure password
+<details>
+<summary><b>Auth</b></summary>
 
-vercel env add ADMIN_JWT_SECRET
-# Enter a random 32+ char string
+- `POST /api/auth/login` — Login
+- `POST /api/auth/logout` — Logout
+- `GET /api/auth/status` — Check session
 
-vercel env add DISCORD_WEBHOOK_DEMO_VIEWS
-# Your Discord webhook URL (optional, for notifications)
-```
+</details>
 
-### 4. Deploy
+<details>
+<summary><b>Leads</b></summary>
 
-```bash
-vercel --prod
-```
+- `GET /api/leads` — List leads (supports `?stats=true`)
+- `POST /api/leads` — Create lead
+- `GET /api/leads/[id]` — Get single lead
+- `PATCH /api/leads/[id]` — Update lead
+- `POST /api/leads/import` — Bulk import from CSV
+- `POST /api/leads/bulk-update` — Bulk status updates
 
-## Environment Variables
+</details>
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `ADMIN_PASSWORD` | Password for admin login | Yes |
-| `ADMIN_JWT_SECRET` | Secret for JWT signing | Yes |
-| `DISCORD_WEBHOOK_DEMO_VIEWS` | Discord webhook for demo view notifications | No |
-| `IP_HASH_SALT` | Salt for hashing IP addresses | No |
-| `POSTGRES_*` | Auto-added by Vercel Postgres | Yes |
+<details>
+<summary><b>Prospects & Calls</b></summary>
 
-## Features
+- `GET /api/prospects` — List prospects
+- `POST /api/prospects/call` — Initiate outbound call
+- `POST /api/prospects/call-webhook` — Twilio call status webhook
+- `POST /api/calls/outbound` — Place outbound call
+- `POST /api/calls/webhook` — Call webhook handler
 
-- **Dashboard** - Overview stats and metrics
-- **Leads** - Full CRUD for lead management
-- **Demos** - Track demo views with analytics
-- **Customers** - Synced from Stripe
+</details>
 
-## API Endpoints
+<details>
+<summary><b>Email</b></summary>
 
-### Auth
-- `POST /api/auth/login` - Login with password
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/status` - Check auth status
+- `POST /api/email/send` — Send outreach or follow-up email
 
-### Demos
-- `POST /api/demo/track` - Log a demo view
-- `GET /api/demos` - List demo views
-- `GET /api/demos?stats=true` - Get demo stats
+</details>
 
-### Leads
-- `GET /api/leads` - List leads
-- `POST /api/leads` - Create lead
-- `GET /api/leads?stats=true` - Get lead stats
-- `GET /api/leads/:id` - Get single lead
-- `PATCH /api/leads/:id` - Update lead
-- `DELETE /api/leads/:id` - Delete lead
+---
 
-### Customers
-- `GET /api/customers` - List customers
+## 📈 Current Scale
 
-## Development
+- **495+ leads** managed
+- **151+ demo views** tracked
+- **16 niche industries** with tailored templates
+- **22 follow-ups sent** through the dashboard
+- **Pipeline value:** $2,161+
 
-```bash
-npm run dev
-```
+---
 
-Open http://localhost:3000
+<div align="center">
+
+  Built by [BEK Tech](https://bek-tech.com) · Powered by [FastFlow](https://fastflow.bek-tech.com)
+
+</div>
