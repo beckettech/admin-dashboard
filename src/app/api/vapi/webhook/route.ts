@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1486050754992144555/-zmjwb723kyPVXi5ZQjc-R837H-JfWWN4xWE57zGkU2Zmz3xgMOHD8PG5w3X4Xw55OLn';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_CALL_LOGS || '';
 const FASTFLOW_SITE = 'https://fastflow.bek-tech.com';
 const SUPPORT_EMAIL = 'becketthoefling@gmail.com';
 
