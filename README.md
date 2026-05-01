@@ -50,38 +50,6 @@ Track every demo view with analytics — who viewed, when, what type (voice phon
 
 ---
 
-## 🚀 Quick Start
-
-### 1. Database
-
-```bash
-vercel postgres create fastflow-db
-```
-
-Run `src/lib/db/schema.sql` to set up tables.
-
-### 2. Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `POSTGRES_URL` | Auto-added by Vercel Postgres |
-| `ADMIN_PASSWORD` | Login password |
-| `ADMIN_JWT_SECRET` | JWT signing secret |
-| `STRIPE_SECRET_KEY` | Stripe API key |
-| `TWILIO_ACCOUNT_SID` | Twilio credentials |
-| `TWILIO_AUTH_TOKEN` | Twilio auth |
-| `TWILIO_PHONE_NUMBER` | Outbound caller ID |
-
-### 3. Deploy
-
-```bash
-npm install
-npm run dev      # Local development
-vercel --prod    # Deploy to production
-```
-
----
-
 ## 📡 API Endpoints
 
 <details>
